@@ -1,6 +1,6 @@
 package com.example.qlns.Controller;
 
-import com.example.qlns.DTO.*;
+import com.example.qlns.DTO.Response.*;
 import com.example.qlns.Entity.*;
 import com.example.qlns.Service.*;
 import org.springframework.http.ResponseEntity;
@@ -10,74 +10,59 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 // =============================================
-// DEPARTMENT CONTROLLER - dùng DTO
+// TV1 - DepartmentController
 // =============================================
 @RestController
 @RequestMapping("/api/departments")
 class DepartmentController {
+    private final DepartmentService deptService;
+    private final EmployeeService empService;
 
-    private final DepartmentService departmentService;
-    private final EmployeeService employeeService;
-
-    public DepartmentController(DepartmentService departmentService,
-                                EmployeeService employeeService) {
-        this.departmentService = departmentService;
-        this.employeeService = employeeService;
+    DepartmentController(DepartmentService deptService, EmployeeService empService) {
+        this.deptService = deptService; this.empService = empService;
     }
 
     @GetMapping
     public ResponseEntity<List<DepartmentDTO>> getAll() {
-        List<DepartmentDTO> result = departmentService.getAll()
-                .stream()
-                .map(dept -> {
-                    int count = employeeService.getByDepartment(dept.getId()).size();
-                    return DepartmentDTO.from(dept, count);
-                })
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(deptService.getAll().stream()
+                .map(d -> DepartmentDTO.from(d, deptService.countEmployees(d.getId())))
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<DepartmentDTO> getById(@PathVariable Long id) {
-        Department dept = departmentService.getById(id);
-        int count = employeeService.getByDepartment(id).size();
-        return ResponseEntity.ok(DepartmentDTO.from(dept, count));
+        Department d = deptService.getById(id);
+        return ResponseEntity.ok(DepartmentDTO.from(d, deptService.countEmployees(id)));
     }
 
     @GetMapping("/{id}/employees")
     public ResponseEntity<List<EmployeeDTO>> getEmployees(@PathVariable Long id) {
-        List<EmployeeDTO> result = employeeService.getByDepartment(id)
-                .stream()
-                .map(EmployeeDTO::from)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(empService.getByDepartment(id).stream()
+                .map(e -> EmployeeDTO.from(e, empService.getRoleByEmployeeId(e.getId())))
+                .collect(Collectors.toList()));
     }
 
     @PostMapping
-    public ResponseEntity<DepartmentDTO> create(@RequestBody Department department) {
-        Department saved = departmentService.create(department);
+    public ResponseEntity<DepartmentDTO> create(@RequestBody Department dept) {
+        Department saved = deptService.create(dept);
         return ResponseEntity.ok(DepartmentDTO.from(saved, 0));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DepartmentDTO> update(@PathVariable Long id,
-                                                @RequestBody Department department) {
-        Department updated = departmentService.update(id, department);
-        int count = employeeService.getByDepartment(id).size();
-        return ResponseEntity.ok(DepartmentDTO.from(updated, count));
+    public ResponseEntity<DepartmentDTO> update(@PathVariable Long id, @RequestBody Department req) {
+        Department updated = deptService.update(id, req);
+        return ResponseEntity.ok(DepartmentDTO.from(updated, deptService.countEmployees(id)));
     }
 
-    @PutMapping("/{departmentId}/manager/{employeeId}")
-    public ResponseEntity<DepartmentDTO> setManager(@PathVariable Long departmentId,
-                                                    @PathVariable Long employeeId) {
-        Department updated = departmentService.setManager(departmentId, employeeId);
-        int count = employeeService.getByDepartment(departmentId).size();
-        return ResponseEntity.ok(DepartmentDTO.from(updated, count));
+    @PutMapping("/{deptId}/manager/{empId}")
+    public ResponseEntity<DepartmentDTO> setManager(@PathVariable Long deptId, @PathVariable Long empId) {
+        Department updated = deptService.setManager(deptId, empId);
+        return ResponseEntity.ok(DepartmentDTO.from(updated, deptService.countEmployees(deptId)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        departmentService.delete(id);
+        deptService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

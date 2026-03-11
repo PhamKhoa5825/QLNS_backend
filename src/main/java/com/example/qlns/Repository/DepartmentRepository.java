@@ -1,14 +1,15 @@
 package com.example.qlns.Repository;
 
-import com.example.qlns.Entity.*;
+import com.example.qlns.Entity.Department;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
-@Repository
+// =============================================
+// TV1 - DepartmentRepository
+// =============================================
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
-    Optional<Department> findByName(String name);
     boolean existsByName(String name);
+
+    Optional<Department> findByName(String name);
 }

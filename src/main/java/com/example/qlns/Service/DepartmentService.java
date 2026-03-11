@@ -1,81 +1,67 @@
 package com.example.qlns.Service;
 
 import com.example.qlns.Entity.*;
-import com.example.qlns.Enum.Role;
+import com.example.qlns.Enum.*;
 import com.example.qlns.Exception.*;
 import com.example.qlns.Repository.*;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 // =============================================
-// 1. DEPARTMENT SERVICE (TV1 viết)
+// TV1 - DepartmentService
 // =============================================
 @Service
 public class DepartmentService {
-    private final DepartmentRepository departmentRepository;
-    private final EmployeeRepository employeeRepository;
+    private final DepartmentRepository deptRepo;
+    private final EmployeeRepository empRepo;
 
-    public DepartmentService(DepartmentRepository departmentRepository,
-                             EmployeeRepository employeeRepository) {
-        this.departmentRepository = departmentRepository;
-        this.employeeRepository = employeeRepository;
+    DepartmentService(DepartmentRepository deptRepo, EmployeeRepository empRepo) {
+        this.deptRepo = deptRepo; this.empRepo = empRepo;
     }
 
-    public List<Department> getAll() {
-        return departmentRepository.findAll();
-    }
+    public List<Department> getAll() { return deptRepo.findAll(); }
 
     public Department getById(Long id) {
-        return departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Phòng ban", id));
+        return deptRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng ban id=" + id));
     }
 
-    public Department create(Department department) {
-        if (departmentRepository.existsByName(department.getName())) {
-            throw new DuplicateException("Tên phòng ban", department.getName());
-        }
-        return departmentRepository.save(department);
+    @Transactional
+    public Department create(Department dept) {
+        if (deptRepo.existsByName(dept.getName()))
+            throw new DuplicateException("Tên phòng ban đã tồn tại: " + dept.getName());
+        return deptRepo.save(dept);
     }
 
-    public Department update(Long id, Department updated) {
-        Department existing = getById(id);
-        if (!existing.getName().equals(updated.getName())
-                && departmentRepository.existsByName(updated.getName())) {
-            throw new DuplicateException("Tên phòng ban", updated.getName());
-        }
-        existing.setName(updated.getName());
-        existing.setDescription(updated.getDescription());
-        return departmentRepository.save(existing);
+    @Transactional
+    public Department update(Long id, Department req) {
+        Department dept = getById(id);
+        dept.setName(req.getName());
+        dept.setDescription(req.getDescription());
+        return deptRepo.save(dept);
     }
 
+    @Transactional
+    public Department setManager(Long deptId, Long empId) {
+        Department dept = getById(deptId);
+        Employee emp = empRepo.findById(empId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên id=" + empId));
+        dept.setManager(emp);
+        return deptRepo.save(dept);
+    }
+
+    @Transactional
     public void delete(Long id) {
-        Department department = getById(id);
-        if (!department.getEmployees().isEmpty()) {
-            throw new BadRequestException("Không thể xóa phòng ban đang có nhân viên");
-        }
-        departmentRepository.deleteById(id);
+        Department dept = getById(id);
+        long count = empRepo.countByDepartmentIdAndStatus(id, EmployeeStatus.ACTIVE);
+        if (count > 0) throw new BadRequestException("Phòng ban còn " + count + " nhân viên đang làm việc");
+        deptRepo.delete(dept);
     }
 
-    public Department setManager(Long departmentId, Long employeeId) {
-        Department department = getById(departmentId);
-        Employee manager = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Nhân viên", employeeId));
-
-        if (manager.getUser().getRole() != Role.MANAGER
-                && manager.getUser().getRole() != Role.ADMIN) {
-            throw new BadRequestException("Nhân viên này không có quyền làm quản lý");
-        }
-        department.setManager(manager);
-        return departmentRepository.save(department);
-    }
-
-    public @Nullable List<Employee> getEmployeesByDepartment(Long id) {
-        return null;
-    }
-
-    public int countEmployees(Long departmentId) {
-        return employeeRepository.findByDepartmentIdAndEndDateIsNull(departmentId).size();
+    public int countEmployees(Long deptId) {
+        return (int) empRepo.countByDepartmentIdAndStatus(deptId, EmployeeStatus.ACTIVE);
     }
 }
+

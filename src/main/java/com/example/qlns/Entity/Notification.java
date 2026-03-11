@@ -1,5 +1,6 @@
 package com.example.qlns.Entity;
 
+import com.example.qlns.Enum.NotificationTarget;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
@@ -8,8 +9,7 @@ import java.time.LocalDateTime;
 @Table(name = "notifications")
 public class Notification {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -19,44 +19,33 @@ public class Notification {
     private String content;
 
     @Enumerated(EnumType.STRING)
-    private NotificationType type;
+    @Column(name = "target_type", nullable = false)
+    private NotificationTarget targetType;  // COMPANY hoặc DEPARTMENT
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id", nullable = false)
-    private Employee employee;          // ← Employee nhận thông báo
+    @JoinColumn(name = "department_id")
+    private Department department;  // Null nếu targetType = COMPANY
 
-    private Long referenceId;
-    private boolean isRead = false;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private Employee createdBy;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    public enum NotificationType { TASK, MESSAGE, MEETING, CHECKIN, HR, WARNING }
-
     public Notification() {}
-
-    public Notification(String title, String content, NotificationType type,
-                        Employee employee, Long referenceId) {
-        this.title = title;
-        this.content = content;
-        this.type = type;
-        this.employee = employee;
-        this.referenceId = referenceId;
-    }
 
     public Long getId() { return id; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
-    public NotificationType getType() { return type; }
-    public void setType(NotificationType type) { this.type = type; }
-    public Employee getEmployee() { return employee; }
-    public void setEmployee(Employee employee) { this.employee = employee; }
-    public Long getReferenceId() { return referenceId; }
-    public void setReferenceId(Long referenceId) { this.referenceId = referenceId; }
-    public boolean isRead() { return isRead; }
-    public void setRead(boolean read) { isRead = read; }
+    public NotificationTarget getTargetType() { return targetType; }
+    public void setTargetType(NotificationTarget targetType) { this.targetType = targetType; }
+    public Department getDepartment() { return department; }
+    public void setDepartment(Department department) { this.department = department; }
+    public Employee getCreatedBy() { return createdBy; }
+    public void setCreatedBy(Employee createdBy) { this.createdBy = createdBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }
 

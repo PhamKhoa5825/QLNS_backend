@@ -1,18 +1,22 @@
 package com.example.qlns.Repository;
 
-import com.example.qlns.Entity.*;
+import com.example.qlns.Entity.Notification;
+import com.example.qlns.Enum.NotificationTarget;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Optional;
 
-@Repository
+// =============================================
+// TV4 - NotificationRepository
+// =============================================
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
+    List<Notification> findByTargetType(NotificationTarget targetType);
 
-    List<Notification> findByEmployeeIdOrderByCreatedAtDesc(Long employeeId);
+    List<Notification> findByDepartmentId(Long departmentId);
 
-    List<Notification> findByEmployeeIdAndIsReadFalseOrderByCreatedAtDesc(Long employeeId);
-
-    long countByEmployeeIdAndIsReadFalse(Long employeeId);
+    @Query("SELECT n FROM Notification n WHERE n.targetType = 'COMPANY' " +
+            "OR (n.targetType = 'DEPARTMENT' AND n.department.id = :deptId)")
+    List<Notification> findForEmployee(@Param("deptId") Long departmentId);
 }

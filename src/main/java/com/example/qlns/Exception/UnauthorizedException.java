@@ -1,10 +1,7 @@
 package com.example.qlns.Exception;
 
-// =============================================
-// 6. 401 - CHƯA ĐĂNG NHẬP (TV2 dùng)
-// =============================================
-public class UnauthorizedException extends AppException {
-    public UnauthorizedException() {
-        super("Vui lòng đăng nhập để tiếp tục", 401);
+public class UnauthorizedException extends RuntimeException {
+    public UnauthorizedException(String message) {
+        super(message);
     }
 }

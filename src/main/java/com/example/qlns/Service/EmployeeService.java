@@ -1,102 +1,106 @@
 package com.example.qlns.Service;
 
-import com.example.qlns.Entity.*;
+import com.example.qlns.Entity.Employee;
+import com.example.qlns.Entity.LeaveBalance;
+import com.example.qlns.Entity.User;
+import com.example.qlns.Enum.EmployeeStatus;
 import com.example.qlns.Enum.Role;
-import com.example.qlns.Exception.*;
-import com.example.qlns.Repository.*;
+import com.example.qlns.Enum.UserStatus;
+import com.example.qlns.Exception.DuplicateException;
+import com.example.qlns.Exception.ResourceNotFoundException;
+import com.example.qlns.Repository.EmployeeRepository;
+import com.example.qlns.Repository.LeaveBalanceRepository;
+import com.example.qlns.Repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 
+// =============================================
+// TV1 - EmployeeService
+// =============================================
 @Service
 public class EmployeeService {
+    private final EmployeeRepository empRepo;
+    private final UserRepository userRepo;
+    private final LeaveBalanceRepository leaveBalanceRepo;
 
-    private final EmployeeRepository employeeRepository;
-    private final UserRepository userRepository;
-    private final DepartmentRepository departmentRepository;
-
-    public EmployeeService(EmployeeRepository employeeRepository,
-                           UserRepository userRepository,
-                           DepartmentRepository departmentRepository) {
-        this.employeeRepository = employeeRepository;
-        this.userRepository = userRepository;
-        this.departmentRepository = departmentRepository;
+    EmployeeService(EmployeeRepository empRepo, UserRepository userRepo,
+                    LeaveBalanceRepository leaveBalanceRepo) {
+        this.empRepo = empRepo;
+        this.userRepo = userRepo;
+        this.leaveBalanceRepo = leaveBalanceRepo;
     }
 
     public List<Employee> getAll() {
-        return employeeRepository.findByEndDateIsNull();
-    }
-
-    public List<Employee> getByDepartment(Long departmentId) {
-        return employeeRepository.findByDepartmentIdAndEndDateIsNull(departmentId);
+        return empRepo.findAll();
     }
 
     public Employee getById(Long id) {
-        return employeeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Nhân viên", id));
+        return empRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên id=" + id));
+    }
+
+    public List<Employee> getByDepartment(Long deptId) {
+        return empRepo.findByDepartmentIdAndStatus(deptId, EmployeeStatus.ACTIVE);
     }
 
     public List<Employee> search(String keyword) {
-        return employeeRepository.findByFullNameContainingIgnoreCase(keyword);
+        return empRepo.search(keyword);
     }
 
-    // Tạo nhân viên mới: tạo User (account) + Employee (thông tin) cùng lúc
     @Transactional
-    public Employee create(Employee employee, String email, String rawPassword) {
-        // Kiểm tra email trùng
-        if (userRepository.existsByEmail(email)) {
-            throw new DuplicateException("Email", email);
-        }
-        // Kiểm tra mã NV trùng
-        if (employeeRepository.existsByEmployeeCode(employee.getEmployeeCode())) {
-            throw new DuplicateException("Mã nhân viên", employee.getEmployeeCode());
-        }
-        // Kiểm tra CCCD trùng
-        if (employee.getNationalId() != null
-                && employeeRepository.existsByNationalId(employee.getNationalId())) {
-            throw new DuplicateException("CCCD", employee.getNationalId());
-        }
+    public Employee create(Employee emp, String email, String password, Role role) {
+        if (userRepo.existsByEmail(email))
+            throw new DuplicateException("Email đã được sử dụng: " + email);
+        // TV2 sẽ inject PasswordEncoder và mã hóa password
+        User user = new User(email.split("@")[0], email, password, role);
+        user = userRepo.save(user);
 
-        // TV2 sẽ inject PasswordEncoder, ở đây để comment gợi ý
-        // String hashedPassword = passwordEncoder.encode(rawPassword);
-        User user = new User(email, rawPassword, Role.EMPLOYEE);
-        userRepository.save(user);
+        emp.setEmail(email);
+        Employee saved = empRepo.save(emp);
 
-        employee.setUser(user);
-        return employeeRepository.save(employee);
+        user.setEmployeeId(saved.getId());
+        userRepo.save(user);
+
+        // Tạo leave balance cho năm hiện tại
+        LeaveBalance lb = new LeaveBalance();
+        lb.setEmployee(saved);
+        lb.setYear(LocalDate.now().getYear());
+        leaveBalanceRepo.save(lb);
+
+        return saved;
     }
 
-    public Employee update(Long id, Employee updated) {
-        Employee existing = getById(id);
-        existing.setFullName(updated.getFullName());
-        existing.setPhone(updated.getPhone());
-        existing.setPosition(updated.getPosition());
-        existing.setAddress(updated.getAddress());
-        existing.setGender(updated.getGender());
-        existing.setBirthDate(updated.getBirthDate());
-        existing.setSalary(updated.getSalary());
-        existing.setContractType(updated.getContractType());
-        existing.setStartDate(updated.getStartDate());
-        existing.setEndDate(updated.getEndDate());
-        existing.setAvatarUrl(updated.getAvatarUrl());
-
-        if (updated.getDepartment() != null) {
-            Department dept = departmentRepository.findById(updated.getDepartment().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Phòng ban",
-                            updated.getDepartment().getId()));
-            existing.setDepartment(dept);
-        }
-        return employeeRepository.save(existing);
+    @Transactional
+    public Employee update(Long id, Employee req) {
+        Employee emp = getById(id);
+        if (req.getFullName() != null) emp.setFullName(req.getFullName());
+        if (req.getPhone() != null) emp.setPhone(req.getPhone());
+        if (req.getAddress() != null) emp.setAddress(req.getAddress());
+        if (req.getPosition() != null) emp.setPosition(req.getPosition());
+        if (req.getDepartment() != null) emp.setDepartment(req.getDepartment());
+        if (req.getAvatarUrl() != null) emp.setAvatarUrl(req.getAvatarUrl());
+        return empRepo.save(emp);
     }
 
-    // Nghỉ việc: set endDate thay vì xóa
-    public void terminate(Long id) {
-        Employee employee = getById(id);
-        employee.setEndDate(LocalDate.now());
-        employee.getUser().setActive(false);
-        employeeRepository.save(employee);
+    @Transactional
+    public void resign(Long id) {
+        Employee emp = getById(id);
+        emp.setStatus(EmployeeStatus.RESIGNED);
+        empRepo.save(emp);
+        // Vô hiệu hóa tài khoản
+        userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
+            u.setStatus(UserStatus.INACTIVE);
+            userRepo.save(u);
+        });
+    }
+
+    public String getRoleByEmployeeId(Long empId) {
+        Employee emp = getById(empId);
+        return userRepo.findByEmail(emp.getEmail())
+                .map(u -> u.getRole().name())
+                .orElse("EMPLOYEE");
     }
 }
-

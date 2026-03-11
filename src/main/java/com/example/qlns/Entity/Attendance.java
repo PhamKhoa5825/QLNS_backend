@@ -1,5 +1,6 @@
 package com.example.qlns.Entity;
 
+import com.example.qlns.Enum.AttendanceStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDate;
@@ -9,68 +10,55 @@ import java.time.LocalDateTime;
 @Table(name = "attendance")
 public class Attendance {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
-    private Employee employee;          // ← đổi từ User sang Employee
+    private Employee employee;
 
     @Column(nullable = false)
     private LocalDate date;
 
-    private LocalDateTime checkInTime;
-    private LocalDateTime checkOutTime;
-    private Double latitude;
-    private Double longitude;
-    private Double distanceFromOffice;
+    @Column(name = "check_in")
+    private LocalDateTime checkIn;
+
+    @Column(name = "check_out")
+    private LocalDateTime checkOut;
+
+    @Column(name = "work_hours")
+    private Float workHours;
+
+    @Column(name = "location_lat")
+    private Double locationLat;
+
+    @Column(name = "location_lng")
+    private Double locationLng;
 
     @Enumerated(EnumType.STRING)
-    private AttendanceStatus status = AttendanceStatus.PRESENT;
-
-    private String note;
+    private AttendanceStatus status = AttendanceStatus.ABSENT;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    public enum AttendanceStatus {
-        PRESENT,    // Có mặt (bao gồm đi trễ nếu không cần phân biệt)
-        LATE,       // Đi trễ
-        ABSENT,     // Vắng mặt không phép
-        LEAVE       // Nghỉ phép có phép
-    }
-
     public Attendance() {}
-
-    public Attendance(Employee employee, LocalDate date, LocalDateTime checkInTime,
-                      Double lat, Double lng, Double distance) {
-        this.employee = employee;
-        this.date = date;
-        this.checkInTime = checkInTime;
-        this.latitude = lat;
-        this.longitude = lng;
-        this.distanceFromOffice = distance;
-    }
 
     public Long getId() { return id; }
     public Employee getEmployee() { return employee; }
     public void setEmployee(Employee employee) { this.employee = employee; }
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
-    public LocalDateTime getCheckInTime() { return checkInTime; }
-    public void setCheckInTime(LocalDateTime t) { this.checkInTime = t; }
-    public LocalDateTime getCheckOutTime() { return checkOutTime; }
-    public void setCheckOutTime(LocalDateTime t) { this.checkOutTime = t; }
-    public Double getLatitude() { return latitude; }
-    public void setLatitude(Double latitude) { this.latitude = latitude; }
-    public Double getLongitude() { return longitude; }
-    public void setLongitude(Double longitude) { this.longitude = longitude; }
-    public Double getDistanceFromOffice() { return distanceFromOffice; }
-    public void setDistanceFromOffice(Double d) { this.distanceFromOffice = d; }
+    public LocalDateTime getCheckIn() { return checkIn; }
+    public void setCheckIn(LocalDateTime checkIn) { this.checkIn = checkIn; }
+    public LocalDateTime getCheckOut() { return checkOut; }
+    public void setCheckOut(LocalDateTime checkOut) { this.checkOut = checkOut; }
+    public Float getWorkHours() { return workHours; }
+    public void setWorkHours(Float workHours) { this.workHours = workHours; }
+    public Double getLocationLat() { return locationLat; }
+    public void setLocationLat(Double locationLat) { this.locationLat = locationLat; }
+    public Double getLocationLng() { return locationLng; }
+    public void setLocationLng(Double locationLng) { this.locationLng = locationLng; }
     public AttendanceStatus getStatus() { return status; }
     public void setStatus(AttendanceStatus status) { this.status = status; }
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

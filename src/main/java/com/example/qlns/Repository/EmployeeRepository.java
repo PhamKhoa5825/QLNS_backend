@@ -1,36 +1,33 @@
 package com.example.qlns.Repository;
 
 import com.example.qlns.Entity.Employee;
+import com.example.qlns.Enum.EmployeeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+// =============================================
+// TV1 - EmployeeRepository
+// =============================================
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
+    Optional<Employee> findByEmail(String email);
 
-    // Tìm theo user (TV2 dùng sau khi login)
-    Optional<Employee> findByUserId(Long userId);
-
-    // Tìm theo mã nhân viên
-    Optional<Employee> findByEmployeeCode(String employeeCode);
-
-    // Danh sách theo phòng ban
     List<Employee> findByDepartmentId(Long departmentId);
 
-    // Tìm kiếm theo tên
-    List<Employee> findByFullNameContainingIgnoreCase(String keyword);
+    List<Employee> findByStatus(EmployeeStatus status);
 
-    // Nhân viên còn đang làm (endDate = null)
-    List<Employee> findByEndDateIsNull();
+    List<Employee> findByDepartmentIdAndStatus(Long departmentId, EmployeeStatus status);
 
-    // Nhân viên theo phòng ban còn làm việc
-    List<Employee> findByDepartmentIdAndEndDateIsNull(Long departmentId);
+    @Query("SELECT e FROM Employee e WHERE e.status = 'ACTIVE' AND " +
+            "(LOWER(e.fullName) LIKE LOWER(CONCAT('%',:kw,'%')) OR " +
+            "LOWER(e.email) LIKE LOWER(CONCAT('%',:kw,'%')) OR " +
+            "LOWER(e.position) LIKE LOWER(CONCAT('%',:kw,'%')))")
+    List<Employee> search(@Param("kw") String keyword);
 
-    // Kiểm tra mã NV đã tồn tại chưa
-    boolean existsByEmployeeCode(String employeeCode);
+    long countByDepartmentIdAndStatus(Long departmentId, EmployeeStatus status);
 
-    // Kiểm tra CCCD đã tồn tại chưa
-    boolean existsByNationalId(String nationalId);
+    long countByStatus(EmployeeStatus status);
 }
