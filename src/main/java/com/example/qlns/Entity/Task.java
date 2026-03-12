@@ -32,7 +32,7 @@ public class Task {
     private TaskPriority priority = TaskPriority.MEDIUM;
 
     @Enumerated(EnumType.STRING)
-    private TaskStatus status = TaskStatus.TODO;
+    private TaskStatus status = TaskStatus.PENDING;
 
     private LocalDateTime deadline;
     private LocalDateTime completedAt;

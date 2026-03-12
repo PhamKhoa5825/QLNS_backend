@@ -41,6 +41,9 @@ public class Attendance {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @Column(name = "late_minutes")
+    private Integer lateMinutes = 0;   // Số phút đi trễ (0 = đúng giờ
+
     public Attendance() {}
 
     public Long getId() { return id; }
@@ -61,4 +64,6 @@ public class Attendance {
     public AttendanceStatus getStatus() { return status; }
     public void setStatus(AttendanceStatus status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public Integer getLateMinutes() { return lateMinutes; }
+    public void setLateMinutes(Integer lateMinutes) { this.lateMinutes = lateMinutes; }
 }

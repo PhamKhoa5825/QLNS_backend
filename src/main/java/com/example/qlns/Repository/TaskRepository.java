@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 // =============================================
@@ -23,6 +24,15 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query("SELECT t FROM Task t WHERE t.status != 'DONE' AND t.deadline < CURRENT_TIMESTAMP")
     List<Task> findOverdueTasks();
+
+    // Tìm task cần đánh dấu OVERDUE
+    // (deadline đã qua, chưa hoàn thành, chưa bị đánh dấu rồi)
+    @Query("""
+        SELECT t FROM Task t
+        WHERE t.deadline < :now
+          AND t.status IN ('PENDING', 'ACCEPTED')
+    """)
+    List<Task> findOverdueTasksToMark(@Param("now") LocalDateTime now);
 
     long countByAssignedToIdAndStatus(Long employeeId, TaskStatus status);
 }

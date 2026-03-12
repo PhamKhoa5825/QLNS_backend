@@ -1,7 +1,6 @@
 package com.example.qlns.Service;
 
 import com.example.qlns.Entity.Employee;
-import com.example.qlns.Entity.LeaveBalance;
 import com.example.qlns.Entity.User;
 import com.example.qlns.Enum.EmployeeStatus;
 import com.example.qlns.Enum.Role;
@@ -9,7 +8,6 @@ import com.example.qlns.Enum.UserStatus;
 import com.example.qlns.Exception.DuplicateException;
 import com.example.qlns.Exception.ResourceNotFoundException;
 import com.example.qlns.Repository.EmployeeRepository;
-import com.example.qlns.Repository.LeaveBalanceRepository;
 import com.example.qlns.Repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +22,10 @@ import java.util.List;
 public class EmployeeService {
     private final EmployeeRepository empRepo;
     private final UserRepository userRepo;
-    private final LeaveBalanceRepository leaveBalanceRepo;
 
-    EmployeeService(EmployeeRepository empRepo, UserRepository userRepo,
-                    LeaveBalanceRepository leaveBalanceRepo) {
+    EmployeeService(EmployeeRepository empRepo, UserRepository userRepo) {
         this.empRepo = empRepo;
         this.userRepo = userRepo;
-        this.leaveBalanceRepo = leaveBalanceRepo;
     }
 
     public List<Employee> getAll() {
@@ -63,12 +58,6 @@ public class EmployeeService {
 
         user.setEmployeeId(saved.getId());
         userRepo.save(user);
-
-        // Tạo leave balance cho năm hiện tại
-        LeaveBalance lb = new LeaveBalance();
-        lb.setEmployee(saved);
-        lb.setYear(LocalDate.now().getYear());
-        leaveBalanceRepo.save(lb);
 
         return saved;
     }
