@@ -27,21 +27,12 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        System.out.println("DEBUG encoder type: " + passwordEncoder.getClass().getSimpleName());
-        System.out.println("DEBUG matches: " + passwordEncoder.matches("password123", user.getPassword()));
-
-        System.out.println("DEBUG password_hash from DB: [" + user.getPassword() + "]");
-
-//        return new UserDetailsImpl(
-//                user.getId(),
-//                user.getUsername(),
-//                user.getPassword(),
-//                user.getRole()
-//        );
-        UserDetails ud = new UserDetailsImpl(user.getId(), user.getUsername(), user.getPassword(), user.getRole());
-        System.out.println("DEBUG UserDetailsImpl.getPassword(): [" + ud.getPassword() + "]");
-        return ud;
+        return new UserDetailsImpl(
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getRole()
+        );
     }
 
     /**
