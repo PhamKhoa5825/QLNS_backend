@@ -23,6 +23,7 @@ public class RequestService {
     @Autowired private EmployeeRepository employeeRepo;
 
     // ── Nhân viên: xem đơn của mình ──────────────────────────
+    @Transactional(readOnly = true)
     public List<RequestDTO> getMyRequests(Long employeeId) {
         return requestRepo.findByEmployeeIdOrderByCreatedAtDesc(employeeId)
                 .stream().map(RequestDTO::from).collect(Collectors.toList());
@@ -87,15 +88,33 @@ public class RequestService {
     }
 
     // ── Manager: xem tất cả đơn phòng ban ────────────────────
+    @Transactional(readOnly = true)
     public List<RequestDTO> getByDepartment(Long deptId) {
         return requestRepo.findByDepartmentId(deptId)
                 .stream().map(RequestDTO::from).collect(Collectors.toList());
     }
 
+    // ── Manager: lọc đơn phòng ban theo trạng thái ──────────
+    @Transactional(readOnly = true)
+    public List<RequestDTO> getByDepartmentAndStatus(Long deptId, String status) {
+        RequestStatus reqStatus = RequestStatus.valueOf(status);
+        return requestRepo.findByDepartmentIdAndStatus(deptId, reqStatus)
+                .stream().map(RequestDTO::from).collect(Collectors.toList());
+    }
+
     // ── Manager: xem đơn chờ duyệt phòng ban ─────────────────
+    @Transactional(readOnly = true)
     public List<RequestDTO> getPendingByDepartment(Long deptId) {
         return requestRepo.findByDepartmentIdAndStatus(deptId, RequestStatus.PENDING)
                 .stream().map(RequestDTO::from).collect(Collectors.toList());
+    }
+
+    // ── Xem chi tiết 1 đơn ────────────────────────────────────
+    @Transactional(readOnly = true)
+    public RequestDTO getRequestById(Long id) {
+        Request r = requestRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn id=" + id));
+        return RequestDTO.from(r);
     }
 
     // ── Manager/Admin: duyệt hoặc từ chối ────────────────────
@@ -124,8 +143,17 @@ public class RequestService {
     }
 
     // ── Admin: xem tất cả đơn toàn công ty ───────────────────
+    @Transactional(readOnly = true)
     public List<RequestDTO> getAllRequests() {
         return requestRepo.findAllByOrderByCreatedAtDesc()
+                .stream().map(RequestDTO::from).collect(Collectors.toList());
+    }
+
+    // ── Admin: lọc tất cả đơn theo trạng thái ──────────────
+    @Transactional(readOnly = true)
+    public List<RequestDTO> getAllRequestsByStatus(String status) {
+        RequestStatus reqStatus = RequestStatus.valueOf(status);
+        return requestRepo.findByStatusOrderByCreatedAtDesc(reqStatus)
                 .stream().map(RequestDTO::from).collect(Collectors.toList());
     }
 }

@@ -6,7 +6,6 @@ import com.example.qlns.Entity.CompanySettings;
 import com.example.qlns.Entity.Employee;
 import com.example.qlns.Enum.AttendanceStatus;
 import com.example.qlns.Exception.AttendanceException;
-import com.example.qlns.Exception.LocationException;
 import com.example.qlns.Exception.ResourceNotFoundException;
 import com.example.qlns.Repository.AttendanceRepository;
 import com.example.qlns.Repository.CompanySettingsRepository;
@@ -28,17 +27,6 @@ public class AttendanceService {
     @Autowired private EmployeeRepository empRepo;
     @Autowired private CompanySettingsRepository settingsRepo;
 
-    // ── Haversine: tính khoảng cách (mét) giữa 2 toạ độ ─────
-    private double haversine(double lat1, double lng1, double lat2, double lng2) {
-        final int R = 6371000;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLng = Math.toRadians(lng2 - lng1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
-
     // ── Lấy settings, ném lỗi nếu chưa cấu hình ─────────────
     private CompanySettings getSettings() {
         return settingsRepo.findById(1L)
@@ -55,13 +43,7 @@ public class AttendanceService {
         if (attendanceRepo.existsByEmployeeIdAndDate(employeeId, today))
             throw new AttendanceException("Đã chấm công hôm nay rồi");
 
-        // Kiểm tra GPS
         CompanySettings settings = getSettings();
-        double distance = haversine(lat, lng, settings.getBaseLat(), settings.getBaseLng());
-        if (distance > settings.getAllowedRadius())
-            throw new LocationException(String.format(
-                    "Ngoài phạm vi %.0fm (bạn cách văn phòng %.0fm)",
-                    settings.getAllowedRadius(), distance));
 
         // Tính trạng thái và số phút trễ
         LocalTime startTime    = LocalTime.parse(settings.getWorkStartTime()); // "08:00"
@@ -121,6 +103,10 @@ public class AttendanceService {
         return attendanceRepo.findByDate(date);
     }
 
+    public List<Attendance> getByDateAndDepartment(LocalDate date, Long deptId) {
+        return attendanceRepo.findByDateAndEmployeeDepartmentId(date, deptId);
+    }
+
     public List<Attendance> getByEmployeeAndMonth(Long empId, int month, int year) {
         LocalDate from = LocalDate.of(year, month, 1);
         LocalDate to   = from.withDayOfMonth(from.lengthOfMonth());
@@ -129,5 +115,23 @@ public class AttendanceService {
 
     public long countWorkingDays(Long empId, int month, int year) {
         return attendanceRepo.countWorkingDays(empId, month, year);
+    }
+
+    public com.example.qlns.DTO.Response.AttendanceStatsDTO getEmployeeStats(Long empId, int month, int year) {
+        long onTime = attendanceRepo.countByEmployeeAndStatus(empId, month, year, AttendanceStatus.ON_TIME);
+        long late = attendanceRepo.countByEmployeeAndStatus(empId, month, year, AttendanceStatus.LATE);
+        // Simplification for absent: assuming 22 working days per month minus (onTime + late), minimum 0
+        long absent = Math.max(0, 22 - (onTime + late)); 
+        return new com.example.qlns.DTO.Response.AttendanceStatsDTO(onTime, late, absent);
+    }
+
+    public List<com.example.qlns.DTO.Response.EmployeeAttendanceStatsDTO> getDepartmentStats(Long deptId, int month, int year) {
+        List<Employee> employees = empRepo.findByDepartmentIdAndStatus(deptId, com.example.qlns.Enum.EmployeeStatus.ACTIVE);
+        return employees.stream().map(emp -> {
+            long onTime = attendanceRepo.countByEmployeeAndStatus(emp.getId(), month, year, AttendanceStatus.ON_TIME);
+            long late = attendanceRepo.countByEmployeeAndStatus(emp.getId(), month, year, AttendanceStatus.LATE);
+            long absent = Math.max(0, 22 - (onTime + late));
+            return new com.example.qlns.DTO.Response.EmployeeAttendanceStatsDTO(emp.getId(), emp.getFullName(), onTime, late, absent);
+        }).collect(java.util.stream.Collectors.toList());
     }
 }

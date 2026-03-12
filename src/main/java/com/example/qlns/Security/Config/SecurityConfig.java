@@ -74,32 +74,58 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // Public endpoints
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // 1. Public endpoints
+                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/validate").permitAll()
+                        .requestMatchers("/api/auth/register").hasRole("ADMIN") // Chỉ Admin tạo tài khoản
                         .requestMatchers("/api/public/**").permitAll()
-                        
-                        // Employee endpoints
-                        .requestMatchers("/api/employees/**").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/attendance/check-in").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/attendance/check-out").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
-                        .requestMatchers("/api/chat/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
-                        .requestMatchers("/api/tasks/my-tasks").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
-                        .requestMatchers("/api/notifications/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
-                        
-                        // Manager endpoints
-                        .requestMatchers("/api/manager/**").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers("/api/department/**").hasAnyRole("MANAGER", "ADMIN")
+
+                        // 2. Attendance (Chấm công)
+                        // Khớp với AttendanceController: /api/attendance/checkin (POST) và /checkout (PUT)
+                        .requestMatchers(HttpMethod.POST, "/api/attendance/checkin").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/attendance/checkout").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers("/api/attendance/employee/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers("/api/attendance/today/department/**").hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers("/api/attendance/today").hasRole("ADMIN")
+
+                        // 3. Requests (Đơn từ) - Khớp với RequestController
+                        .requestMatchers(HttpMethod.GET, "/api/requests/employee/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/requests/employee/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers("/api/requests/department/**").hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers("/api/requests/*/review/**").hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/requests/*/status").hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/requests/status").hasRole("ADMIN") // Admin lọc theo status
+                        .requestMatchers(HttpMethod.GET, "/api/requests").hasRole("ADMIN") // Chỉ Admin xem tất cả
+
+                        // 4. Tasks (Công việc) - Khớp với TaskController
+                        .requestMatchers("/api/tasks/my/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/tasks/department/**").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/tasks/**").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/tasks/**").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers("/api/leaves/approve").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers("/api/leaves/reject").hasAnyRole("MANAGER", "ADMIN")
-                        
-                        // Admin endpoints
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/employees/manage/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/tasks/*/accept").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/tasks/*/status").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/tasks/*").hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/tasks/**").hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/tasks").hasRole("ADMIN") // Admin xem tất cả tasks
+
+                        // 5. Chat
+                        .requestMatchers("/api/chat/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+
+                        // 6. Notifications — Xem: tất cả, Tạo: chỉ Manager/Admin
+                        .requestMatchers(HttpMethod.GET, "/api/notifications/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/notifications/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/notifications/**").hasAnyRole("MANAGER", "ADMIN")
+
+                        // 7. Employees & Departments (Quản lý nhân sự/phòng ban)
+                        .requestMatchers(HttpMethod.GET, "/api/employees/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/employees/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/employees/**").hasRole("ADMIN") // Chỉ Admin mới tạo được NV
+                        .requestMatchers("/api/departments/*/dashboard").hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers("/api/departments/**").hasAnyRole("MANAGER", "ADMIN")
+
+                        // 8. System Settings
                         .requestMatchers("/api/settings/**").hasRole("ADMIN")
-                        
-                        // All other requests require authentication
+
+                        // Tất cả các request khác phải authenticated
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)

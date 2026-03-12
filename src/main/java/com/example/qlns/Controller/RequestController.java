@@ -2,6 +2,9 @@ package com.example.qlns.Controller;
 
 import com.example.qlns.DTO.Request.*;
 import com.example.qlns.DTO.Response.*;
+import com.example.qlns.Entity.User;
+import com.example.qlns.Repository.UserRepository;
+import com.example.qlns.Security.SecurityService;
 import com.example.qlns.Service.RequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +17,8 @@ import java.util.List;
 public class RequestController {
 
     @Autowired private RequestService requestService;
+    @Autowired private SecurityService securityService;
+    @Autowired private UserRepository userRepo;
 
     // ── Nhân viên: xem đơn của mình ──────────────────────────
     // GET /api/requests/employee/{empId}
@@ -57,7 +62,19 @@ public class RequestController {
     @GetMapping("/department/{deptId}")
     public ResponseEntity<List<RequestDTO>> getByDepartment(
             @PathVariable Long deptId) {
+        // Manager chỉ xem được đơn phòng ban mình, Admin xem tất cả
+        securityService.validateManagerDepartment(deptId);
         return ResponseEntity.ok(requestService.getByDepartment(deptId));
+    }
+
+    // ── Manager: lọc đơn phòng ban theo trạng thái ──────────
+    // GET /api/requests/department/{deptId}/status?status=APPROVED
+    @GetMapping("/department/{deptId}/status")
+    public ResponseEntity<List<RequestDTO>> getByDepartmentAndStatus(
+            @PathVariable Long deptId,
+            @RequestParam String status) {
+        securityService.validateManagerDepartment(deptId);
+        return ResponseEntity.ok(requestService.getByDepartmentAndStatus(deptId, status));
     }
 
     // ── Manager: đơn chờ duyệt phòng ban ─────────────────────
@@ -65,7 +82,16 @@ public class RequestController {
     @GetMapping("/department/{deptId}/pending")
     public ResponseEntity<List<RequestDTO>> getPendingByDepartment(
             @PathVariable Long deptId) {
+        // Manager chỉ xem được đơn chờ duyệt phòng ban mình
+        securityService.validateManagerDepartment(deptId);
         return ResponseEntity.ok(requestService.getPendingByDepartment(deptId));
+    }
+
+    // ── Xem chi tiết đơn ──────────────────────────────────────
+    // GET /api/requests/{id}
+    @GetMapping("/{id}")
+    public ResponseEntity<RequestDTO> getRequestById(@PathVariable Long id) {
+        return ResponseEntity.ok(requestService.getRequestById(id));
     }
 
     // ── Manager/Admin: duyệt hoặc từ chối ────────────────────
@@ -78,10 +104,37 @@ public class RequestController {
         return ResponseEntity.ok(requestService.reviewRequest(id, reviewerId, req));
     }
 
+    // ── Thêm: Endpoint để App gọi đơn giản (Dùng trong RequestActivity.java) ──
+    @PutMapping("/{id}/status")
+    public ResponseEntity<RequestDTO> updateRequestStatus(
+            @PathVariable Long id,
+            @RequestParam String status) {
+        // Tạm thời lấy reviewerId là manager của dept hoặc hardcode reviewerId nếu không có context chi tiết cho endpoint này
+        // Ở đây ta có thể lấy reviewerId từ SecurityContext
+        Long reviewerUserId = securityService.getCurrentUserId();
+        User user = userRepo.findById(reviewerUserId).orElseThrow();
+        Long reviewerId = user.getEmployeeId();
+
+        ReviewRequestRequest reviewRequest = new ReviewRequestRequest();
+        reviewRequest.setApproved("APPROVED".equalsIgnoreCase(status));
+        if (!reviewRequest.isApproved()) {
+            reviewRequest.setRejectionReason("Từ chối bởi quản lý");
+        }
+
+        return ResponseEntity.ok(requestService.reviewRequest(id, reviewerId, reviewRequest));
+    }
+
     // ── Admin: xem tất cả đơn ────────────────────────────────
     // GET /api/requests
     @GetMapping
     public ResponseEntity<List<RequestDTO>> getAllRequests() {
         return ResponseEntity.ok(requestService.getAllRequests());
+    }
+
+    // ── Admin: lọc tất cả đơn theo trạng thái ──────────────
+    // GET /api/requests/status?status=PENDING
+    @GetMapping("/status")
+    public ResponseEntity<List<RequestDTO>> getAllRequestsByStatus(@RequestParam String status) {
+        return ResponseEntity.ok(requestService.getAllRequestsByStatus(status));
     }
 }

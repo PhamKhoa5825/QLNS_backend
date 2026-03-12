@@ -16,7 +16,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     List<Notification> findByDepartmentId(Long departmentId);
 
-    @Query("SELECT n FROM Notification n WHERE n.targetType = 'COMPANY' " +
-            "OR (n.targetType = 'DEPARTMENT' AND n.department.id = :deptId)")
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"department", "createdBy"})
+    @Query("SELECT n FROM Notification n LEFT JOIN n.department d " +
+           "WHERE n.targetType = com.example.qlns.Enum.NotificationTarget.COMPANY OR (n.targetType = com.example.qlns.Enum.NotificationTarget.DEPARTMENT AND d.id = :deptId)")
     List<Notification> findForEmployee(@Param("deptId") Long departmentId);
 }

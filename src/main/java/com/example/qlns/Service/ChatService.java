@@ -2,6 +2,7 @@ package com.example.qlns.Service;
 
 import com.example.qlns.Entity.ChatRoom;
 import com.example.qlns.Entity.ChatRoomMember;
+import com.example.qlns.Entity.Department;
 import com.example.qlns.Entity.Message;
 import com.example.qlns.Entity.User;
 import com.example.qlns.Enum.ChatRoomType;
@@ -10,6 +11,7 @@ import com.example.qlns.Exception.ForbiddenException;
 import com.example.qlns.Exception.ResourceNotFoundException;
 import com.example.qlns.Repository.ChatRoomMemberRepository;
 import com.example.qlns.Repository.ChatRoomRepository;
+import com.example.qlns.Repository.DepartmentRepository;
 import com.example.qlns.Repository.MessageRepository;
 import com.example.qlns.Repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -26,13 +28,16 @@ public class ChatService {
     private final ChatRoomMemberRepository memberRepo;
     private final MessageRepository messageRepo;
     private final UserRepository userRepo;
+    private final DepartmentRepository deptRepo;
 
     ChatService(ChatRoomRepository roomRepo, ChatRoomMemberRepository memberRepo,
-                MessageRepository messageRepo, UserRepository userRepo) {
+                MessageRepository messageRepo, UserRepository userRepo,
+                DepartmentRepository deptRepo) {
         this.roomRepo = roomRepo;
         this.memberRepo = memberRepo;
         this.messageRepo = messageRepo;
         this.userRepo = userRepo;
+        this.deptRepo = deptRepo;
     }
 
     public List<ChatRoom> getRoomsForUser(Long userId) {
@@ -55,9 +60,12 @@ public class ChatService {
 
     @Transactional
     public ChatRoom createDepartmentRoom(Long departmentId, String name) {
+        Department dept = deptRepo.findById(departmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng ban"));
         ChatRoom room = new ChatRoom();
         room.setName(name);
         room.setType(ChatRoomType.DEPARTMENT);
+        room.setDepartment(dept);
         return roomRepo.save(room);
     }
 

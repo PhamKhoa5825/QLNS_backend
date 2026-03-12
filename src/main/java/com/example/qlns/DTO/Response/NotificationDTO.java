@@ -18,7 +18,7 @@ public class NotificationDTO {
         dto.id = n.getId();
         dto.title = n.getTitle();
         dto.content = n.getContent();
-        dto.targetType = n.getTargetType().name();
+        dto.targetType = n.getTargetType() != null ? n.getTargetType().name() : "COMPANY";
         dto.createdAt = n.getCreatedAt() != null ? n.getCreatedAt().toString() : null;
         dto.isRead = isRead;
         if (n.getDepartment() != null) {

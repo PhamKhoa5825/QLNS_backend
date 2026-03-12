@@ -6,6 +6,7 @@ import com.example.qlns.DTO.Response.EmployeeDTO;
 import com.example.qlns.Entity.Employee;
 import com.example.qlns.Enum.Gender;
 import com.example.qlns.Enum.Role;
+import com.example.qlns.Security.SecurityService;
 import com.example.qlns.Service.EmployeeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,18 +20,23 @@ import java.util.stream.Collectors;
 // =============================================
 @RestController
 @RequestMapping("/api/employees")
-class EmployeeController {
+public class EmployeeController {
     private final EmployeeService empService;
+    private final SecurityService securityService;
 
-    EmployeeController(EmployeeService empService) {
+    EmployeeController(EmployeeService empService, SecurityService securityService) {
         this.empService = empService;
+        this.securityService = securityService;
     }
 
     @GetMapping
     public ResponseEntity<List<EmployeeDTO>> getAll() {
-        return ResponseEntity.ok(empService.getAll().stream()
-                .map(e -> EmployeeDTO.from(e, empService.getRoleByEmployeeId(e.getId())))
-                .collect(Collectors.toList()));
+        // Admin xem tất cả, Manager chỉ xem phòng ban mình
+        if (securityService.isAdmin()) {
+            return ResponseEntity.ok(empService.getAll());
+        }
+        Long deptId = securityService.getManagerDepartmentId();
+        return ResponseEntity.ok(empService.getByDepartment(deptId));
     }
 
     @GetMapping("/{id}")
@@ -41,15 +47,15 @@ class EmployeeController {
 
     @GetMapping("/department/{deptId}")
     public ResponseEntity<List<EmployeeDTO>> getByDepartment(@PathVariable Long deptId) {
-        return ResponseEntity.ok(empService.getByDepartment(deptId).stream()
-                .map(e -> EmployeeDTO.from(e, empService.getRoleByEmployeeId(e.getId())))
-                .collect(Collectors.toList()));
+        // Manager chỉ xem được NV phòng ban mình, Admin xem tất cả
+        securityService.validateManagerDepartment(deptId);
+        return ResponseEntity.ok(empService.getByDepartment(deptId));
     }
 
     @GetMapping("/search")
     public ResponseEntity<List<EmployeeDTO>> search(@RequestParam String keyword) {
         return ResponseEntity.ok(empService.search(keyword).stream()
-                .map(e -> EmployeeDTO.from(e, empService.getRoleByEmployeeId(e.getId())))
+                .map(EmployeeDTO::from)
                 .collect(Collectors.toList()));
     }
 

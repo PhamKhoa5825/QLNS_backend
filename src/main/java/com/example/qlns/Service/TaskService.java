@@ -1,9 +1,11 @@
 package com.example.qlns.Service;
 
+import com.example.qlns.DTO.Request.UpdateTaskRequest;
 import com.example.qlns.DTO.Response.TaskDTO;
 import com.example.qlns.Entity.Employee;
 import com.example.qlns.Entity.Task;
 import com.example.qlns.Entity.TaskUpdate;
+import com.example.qlns.Enum.TaskPriority;
 import com.example.qlns.Enum.TaskStatus;
 import com.example.qlns.Exception.*;
 import com.example.qlns.Repository.EmployeeRepository;
@@ -25,19 +27,29 @@ public class TaskService {
     @Autowired private TaskUpdateRepository taskUpdateRepo;
     @Autowired private EmployeeRepository empRepo;
 
+    // ── Admin: Xem tất cả task ─────────────────────────────────
+    @Transactional(readOnly = true)
+    public List<TaskDTO> getAll() {
+        return taskRepo.findAll()
+                .stream().map(TaskDTO::from).collect(Collectors.toList());
+    }
+
     // ── Xem task của nhân viên ────────────────────────────────
+    @Transactional(readOnly = true)
     public List<TaskDTO> getMyTasks(Long empId) {
         return taskRepo.findByAssignedToId(empId)
                 .stream().map(TaskDTO::from).collect(Collectors.toList());
     }
 
     // ── Xem task theo phòng ban ───────────────────────────────
+    @Transactional(readOnly = true)
     public List<TaskDTO> getByDepartment(Long deptId) {
         return taskRepo.findByDepartmentId(deptId)
                 .stream().map(TaskDTO::from).collect(Collectors.toList());
     }
 
     // ── Xem chi tiết task ────────────────────────────────────
+    @Transactional(readOnly = true)
     public TaskDTO getById(Long id) {
         Task task = taskRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhiệm vụ id=" + id));
@@ -49,6 +61,34 @@ public class TaskService {
     public TaskDTO create(Task task) {
         // Task mới luôn bắt đầu ở PENDING
         task.setStatus(TaskStatus.PENDING);
+        return TaskDTO.from(taskRepo.save(task));
+    }
+
+    // ── Chỉnh sửa task (Manager/Admin) ───────────────────────
+    @Transactional
+    public TaskDTO updateTask(Long taskId, UpdateTaskRequest req) {
+        Task task = taskRepo.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhiệm vụ id=" + taskId));
+
+        // Không cho sửa task đã hoàn thành
+        if (task.getStatus() == TaskStatus.DONE)
+            throw new BadRequestException("Task đã hoàn thành, không thể chỉnh sửa");
+
+        if (req.getTitle() != null && !req.getTitle().isBlank())
+            task.setTitle(req.getTitle().trim());
+        if (req.getDescription() != null)
+            task.setDescription(req.getDescription());
+        if (req.getPriority() != null)
+            task.setPriority(TaskPriority.valueOf(req.getPriority()));
+        if (req.getDeadline() != null)
+            task.setDeadline(java.time.LocalDate.parse(req.getDeadline()).atStartOfDay());
+        if (req.getAssignedToId() != null) {
+            Employee newAssignee = empRepo.findById(req.getAssignedToId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Không tìm thấy nhân viên id=" + req.getAssignedToId()));
+            task.setAssignedTo(newAssignee);
+        }
+
         return TaskDTO.from(taskRepo.save(task));
     }
 
@@ -83,6 +123,28 @@ public class TaskService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy task"));
 
         TaskStatus current = task.getStatus();
+
+        // Kiểm tra quyền: Nếu là nhân viên, chỉ được phép sửa task của chính mình
+        if (!empRepo.existsById(updatedById)) {
+            throw new ResourceNotFoundException("Không tìm thấy nhân viên cập nhật");
+        }
+        
+        // Nếu không phải là Manager của phòng ban đó và cũng không phải Admin, thì phải là người được giao
+        // Tuy nhiên ở đây service chưa có dependency SecurityService dễ dàng, 
+        // Ta có thể kiểm tra đơn giản: Nếu ID người cập nhật khác người được giao, 
+        // thì người đó phải có quyền quản lý (đây là logic nghiệp vụ).
+        // Để đơn giản và an toàn theo yêu cầu: Nhân viên chỉ sửa task của mình.
+        if (!task.getAssignedTo().getId().equals(updatedById)) {
+            // Kiểm tra xem có phải Manager không (tạm thời cho phép nếu là Manager/Admin qua logic Controller hoặc ở đây)
+            // Trong context này, ta tin tưởng updatedById được truyền từ frontend an toàn (đã qua login)
+            // Nhưng vẫn nên bảo vệ: nếu không phải người được giao, ta ném lỗi nếu họ là Employee
+            // Giả sử ta có cách check Role hoặc đơn giản là:
+            // "Chỉ người được giao HOẶC người giao (Manager) mới được cập nhật"
+            if (!task.getAssignedBy().getId().equals(updatedById)) {
+                // Admin check? Tạm thời chặn nếu không liên quan
+                 throw new ForbiddenException("Bạn không có quyền cập nhật trạng thái nhiệm vụ này");
+            }
+        }
 
         // Không cho sửa task đã hoàn thành
         if (current == TaskStatus.DONE)

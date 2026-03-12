@@ -16,6 +16,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     List<Attendance> findByEmployeeId(Long employeeId);
     List<Attendance> findByEmployeeIdAndDateBetween(Long employeeId, LocalDate from, LocalDate to);
     List<Attendance> findByDate(LocalDate date);
+    List<Attendance> findByDateAndEmployeeDepartmentId(LocalDate date, Long departmentId);
 
     @Query("SELECT COUNT(a) FROM Attendance a WHERE a.employee.id = :empId " +
             "AND MONTH(a.date) = :month AND YEAR(a.date) = :year " +
@@ -25,5 +26,20 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
                           @Param("year") int year);
 
     boolean existsByEmployeeIdAndDate(Long employeeId, LocalDate date);
+
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.employee.department.id = :deptId " +
+            "AND a.status = :status AND a.date BETWEEN :from AND :to")
+    long countByDepartmentAndStatusBetween(@Param("deptId") Long deptId,
+                                           @Param("status") com.example.qlns.Enum.AttendanceStatus status,
+                                           @Param("from") LocalDate from,
+                                           @Param("to") LocalDate to);
+
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.employee.id = :empId " +
+            "AND MONTH(a.date) = :month AND YEAR(a.date) = :year " +
+            "AND a.status = :status")
+    long countByEmployeeAndStatus(@Param("empId") Long empId,
+                                  @Param("month") int month,
+                                  @Param("year") int year,
+                                  @Param("status") com.example.qlns.Enum.AttendanceStatus status);
 }
 

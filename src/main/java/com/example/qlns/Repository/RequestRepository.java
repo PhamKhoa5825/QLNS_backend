@@ -20,7 +20,9 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     // Đơn chờ duyệt của phòng ban (Manager xem)
     @Query("""
         SELECT r FROM Request r
-        WHERE r.employee.department.id = :deptId
+        JOIN r.employee e
+        JOIN e.department d
+        WHERE d.id = :deptId
         ORDER BY r.createdAt DESC
     """)
     List<Request> findByDepartmentId(@Param("deptId") Long deptId);
@@ -28,7 +30,9 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     // Đơn chờ duyệt của phòng ban lọc theo status
     @Query("""
         SELECT r FROM Request r
-        WHERE r.employee.department.id = :deptId
+        JOIN r.employee e
+        JOIN e.department d
+        WHERE d.id = :deptId
           AND r.status = :status
         ORDER BY r.createdAt DESC
     """)

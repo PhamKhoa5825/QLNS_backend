@@ -9,6 +9,8 @@ import com.example.qlns.Repository.EmployeeRepository;
 import com.example.qlns.Repository.NotificationRepository;
 import com.example.qlns.Repository.UserNotificationRepository;
 import com.example.qlns.Repository.UserRepository;
+import com.example.qlns.DTO.Response.NotificationDTO;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,14 @@ public class NotificationService {
         this.userNotiRepo = userNotiRepo;
         this.userRepo = userRepo;
         this.empRepo = empRepo;
+    }
+
+    // ── Admin: Xem tất cả thông báo ────────────────────────────
+    @Transactional(readOnly = true)
+    public List<NotificationDTO> getAll() {
+        return notiRepo.findAll().stream()
+                .map(n -> NotificationDTO.from(n, false))
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -57,8 +67,17 @@ public class NotificationService {
         return saved;
     }
 
-    public List<Notification> getForEmployee(Long deptId) {
-        return notiRepo.findForEmployee(deptId);
+    @Transactional(readOnly = true)
+    public List<NotificationDTO> getForEmployee(Long deptId, Long userId) {
+        return notiRepo.findForEmployee(deptId).stream()
+                .map(n -> {
+                    // Kiểm tra nếu có bất kỳ bản ghi nào đã đọc (đề phòng trùng lặp dữ liệu)
+                    boolean isRead = userNotiRepo.findByUserIdAndNotificationId(userId, n.getId())
+                            .stream()
+                            .anyMatch(un -> un.isRead());
+                    return NotificationDTO.from(n, isRead);
+                })
+                .collect(Collectors.toList());
     }
 
     public long countUnread(Long userId) {
@@ -67,10 +86,10 @@ public class NotificationService {
 
     @Transactional
     public void markAsRead(Long userId, Long notificationId) {
-        userNotiRepo.findByUserIdAndNotificationId(userId, notificationId)
-                .ifPresent(un -> {
-                    un.setRead(true);
-                    userNotiRepo.save(un);
-                });
+        List<UserNotification> uns = userNotiRepo.findByUserIdAndNotificationId(userId, notificationId);
+        if (!uns.isEmpty()) {
+            uns.forEach(un -> un.setRead(true));
+            userNotiRepo.saveAll(uns);
+        }
     }
 }

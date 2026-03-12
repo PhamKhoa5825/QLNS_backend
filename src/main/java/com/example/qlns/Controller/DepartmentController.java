@@ -3,6 +3,7 @@ package com.example.qlns.Controller;
 import com.example.qlns.DTO.Response.*;
 import com.example.qlns.Entity.*;
 import com.example.qlns.Service.*;
+import com.example.qlns.Security.SecurityService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +18,10 @@ import java.util.stream.Collectors;
 class DepartmentController {
     private final DepartmentService deptService;
     private final EmployeeService empService;
+    private final SecurityService securityService;
 
-    DepartmentController(DepartmentService deptService, EmployeeService empService) {
-        this.deptService = deptService; this.empService = empService;
+    DepartmentController(DepartmentService deptService, EmployeeService empService, SecurityService securityService) {
+        this.deptService = deptService; this.empService = empService; this.securityService = securityService;
     }
 
     @GetMapping
@@ -37,9 +39,9 @@ class DepartmentController {
 
     @GetMapping("/{id}/employees")
     public ResponseEntity<List<EmployeeDTO>> getEmployees(@PathVariable Long id) {
-        return ResponseEntity.ok(empService.getByDepartment(id).stream()
-                .map(e -> EmployeeDTO.from(e, empService.getRoleByEmployeeId(e.getId())))
-                .collect(Collectors.toList()));
+        // Manager chỉ xem được NV phòng ban mình, Admin xem tất cả
+        securityService.validateManagerDepartment(id);
+        return ResponseEntity.ok(empService.getByDepartment(id));
     }
 
     @PostMapping

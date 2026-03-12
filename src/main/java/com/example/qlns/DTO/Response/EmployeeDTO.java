@@ -18,6 +18,10 @@ public class EmployeeDTO {
     private String departmentName;
     private String role;            // Từ bảng users
 
+    public static EmployeeDTO from(Employee emp) {
+        return from(emp, null);
+    }
+
     public static EmployeeDTO from(Employee emp, String role) {
         EmployeeDTO dto = new EmployeeDTO();
         dto.id = emp.getId();

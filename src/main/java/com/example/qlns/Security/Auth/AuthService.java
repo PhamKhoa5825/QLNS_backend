@@ -3,10 +3,13 @@ package com.example.qlns.Security.Auth;
 import com.example.qlns.DTO.Request.AuthenticationRequest;
 import com.example.qlns.DTO.Request.UserRegistrationRequest;
 import com.example.qlns.DTO.Response.AuthenticationResponse;
+import com.example.qlns.Entity.Department;
 import com.example.qlns.Entity.User;
+import com.example.qlns.Enum.Role;
 import com.example.qlns.Enum.UserStatus;
 import com.example.qlns.Exception.DuplicateException;
 import com.example.qlns.Exception.ResourceNotFoundException;
+import com.example.qlns.Repository.DepartmentRepository;
 import com.example.qlns.Repository.UserRepository;
 import com.example.qlns.Security.JwtService;
 import com.example.qlns.Security.UserDetailsImpl;
@@ -39,6 +42,12 @@ public class AuthService {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private DepartmentRepository departmentRepository;
+
+    @Autowired
+    private com.example.qlns.Repository.EmployeeRepository employeeRepository;
+
     /**
      * Authenticate user and generate JWT token
      */
@@ -62,13 +71,32 @@ public class AuthService {
             User user = userRepository.findByUsername(request.getUsername())
                     .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+            // Resolve departmentId and employeeId for all roles
+            Long departmentId = null;
+            Long employeeId = user.getEmployeeId();
+
+            if (employeeId != null) {
+                if (user.getRole() == Role.MANAGER) {
+                    // 1. Tìm phòng ban mà manager được gán quản lý
+                    departmentId = departmentRepository.findByManagerId(employeeId)
+                            .map(Department::getId)
+                            .orElse(null);
+                }
+                // 2. Fallback cho tất cả roles: lấy department_id trực tiếp (tránh lazy loading)
+                if (departmentId == null) {
+                    departmentId = employeeRepository.findDepartmentIdByEmployeeId(employeeId);
+                }
+            }
+
             // Return authentication response
             return new AuthenticationResponse(
                     token,
                     user.getId(),
                     user.getUsername(),
                     user.getEmail(),
-                    user.getRole()
+                    user.getRole(),
+                    departmentId,
+                    employeeId
             );
 
         } catch (AuthenticationException e) {

@@ -11,8 +11,9 @@ import com.example.qlns.Repository.EmployeeRepository;
 import com.example.qlns.Repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.qlns.DTO.Response.EmployeeDTO;
+import java.util.stream.Collectors;
 
-import java.time.LocalDate;
 import java.util.List;
 
 // =============================================
@@ -28,17 +29,24 @@ public class EmployeeService {
         this.userRepo = userRepo;
     }
 
-    public List<Employee> getAll() {
-        return empRepo.findAll();
+    @Transactional(readOnly = true)
+    public List<EmployeeDTO> getAll() {
+        return empRepo.findAllWithDept().stream()
+                .map(EmployeeDTO::from)
+                .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public Employee getById(Long id) {
         return empRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên id=" + id));
     }
 
-    public List<Employee> getByDepartment(Long deptId) {
-        return empRepo.findByDepartmentIdAndStatus(deptId, EmployeeStatus.ACTIVE);
+    @Transactional(readOnly = true)
+    public List<EmployeeDTO> getByDepartment(Long deptId) {
+        return empRepo.findByDepartmentIdAndStatus(deptId, EmployeeStatus.ACTIVE).stream()
+                .map(EmployeeDTO::from)
+                .collect(Collectors.toList());
     }
 
     public List<Employee> search(String keyword) {
