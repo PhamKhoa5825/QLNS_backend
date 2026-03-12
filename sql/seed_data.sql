@@ -33,8 +33,8 @@ ALTER TABLE task_updates
     MODIFY COLUMN status ENUM('PENDING','ACCEPTED','DONE','OVERDUE') NOT NULL;
 
 -- ── Đảm bảo cột late_minutes tồn tại ─────────────────────────
-ALTER TABLE attendance
-    ADD COLUMN IF NOT EXISTS late_minutes INT NOT NULL DEFAULT 0;
+-- ALTER TABLE attendance
+--     ADD COLUMN IF NOT EXISTS late_minutes INT NOT NULL DEFAULT 0;
 
 -- =============================================
 -- 1. COMPANY SETTINGS
@@ -71,16 +71,16 @@ INSERT INTO employees (id, full_name, email, phone, address, date_of_birth, gend
 -- 4. USERS
 -- =============================================
 INSERT INTO users (id, username, email, password_hash, role, status, employee_id, created_at) VALUES
-                                                                                                  (1,  'admin',        'admin@company.com',        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ADMIN',    'ACTIVE',   1,  NOW()),
-                                                                                                  (2,  'manager_it',   'manager.it@company.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'MANAGER',  'ACTIVE',   2,  NOW()),
-                                                                                                  (3,  'lap_lv',       'lap.lv@company.com',        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'EMPLOYEE', 'ACTIVE',   3,  NOW()),
-                                                                                                  (4,  'tester_pt',    'tester.pt@company.com',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'EMPLOYEE', 'ACTIVE',   4,  NOW()),
-                                                                                                  (5,  'manager_hr',   'manager.hr@company.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'MANAGER',  'ACTIVE',   5,  NOW()),
-                                                                                                  (6,  'nhansu_hv',    'nhansu.hv@company.com',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'EMPLOYEE', 'ACTIVE',   6,  NOW()),
-                                                                                                  (7,  'ketoan_dt',    'ketoan.dt@company.com',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'EMPLOYEE', 'ACTIVE',   7,  NOW()),
-                                                                                                  (8,  'kinhdoanh_bv', 'kinhdoanh.bv@company.com',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'EMPLOYEE', 'ACTIVE',   8,  NOW()),
-                                                                                                  (9,  'hanhchinh_nt', 'hanhchinh.nt@company.com',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'EMPLOYEE', 'ACTIVE',   9,  NOW()),
-                                                                                                  (10, 'cu_tv',        'cu.tv@company.com',           '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'EMPLOYEE', 'INACTIVE', 10, NOW());
+                                                                                                  (1,  'admin',        'admin@company.com',        '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'ADMIN',    'ACTIVE',   1,  NOW()),
+                                                                                                  (2,  'manager_it',   'manager.it@company.com',   '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'MANAGER',  'ACTIVE',   2,  NOW()),
+                                                                                                  (3,  'lap_lv',       'lap.lv@company.com',        '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'EMPLOYEE', 'ACTIVE',   3,  NOW()),
+                                                                                                  (4,  'tester_pt',    'tester.pt@company.com',     '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'EMPLOYEE', 'ACTIVE',   4,  NOW()),
+                                                                                                  (5,  'manager_hr',   'manager.hr@company.com',    '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'MANAGER',  'ACTIVE',   5,  NOW()),
+                                                                                                  (6,  'nhansu_hv',    'nhansu.hv@company.com',     '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'EMPLOYEE', 'ACTIVE',   6,  NOW()),
+                                                                                                  (7,  'ketoan_dt',    'ketoan.dt@company.com',      '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'EMPLOYEE', 'ACTIVE',   7,  NOW()),
+                                                                                                  (8,  'kinhdoanh_bv', 'kinhdoanh.bv@company.com',  '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'EMPLOYEE', 'ACTIVE',   8,  NOW()),
+                                                                                                  (9,  'hanhchinh_nt', 'hanhchinh.nt@company.com',  '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'EMPLOYEE', 'ACTIVE',   9,  NOW()),
+                                                                                                  (10, 'cu_tv',        'cu.tv@company.com',           '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'EMPLOYEE', 'INACTIVE', 10, NOW());
 
 -- =============================================
 -- 5. SET MANAGER CHO DEPARTMENTS

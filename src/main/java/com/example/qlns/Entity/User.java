@@ -19,8 +19,9 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    // Đặt tên field là passwordHash (camelCase) cho nhất quán
     @Column(name = "password_hash", nullable = false)
-    private String password;        // BCrypt - TV2 xử lý
+    private String passwordHash = "";
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -31,31 +32,46 @@ public class User {
     private UserStatus status = UserStatus.ACTIVE;
 
     @Column(name = "employee_id")
-    private Long employeeId;       // FK tới employees (không dùng @OneToOne để tránh circular)
+    private Long employeeId;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     public User() {}
+
+    // Constructor TV1 dùng khi tạo user mới (password chưa BCrypt, TV2 sẽ encode)
     public User(String username, String email, String password, Role role) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.role = role;
+        this.username     = username;
+        this.email        = email;
+        this.passwordHash = password;
+        this.role         = role;
     }
 
-    public Long getId() { return id; }
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
-    public UserStatus getStatus() { return status; }
-    public void setStatus(UserStatus status) { this.status = status; }
-    public Long getEmployeeId() { return employeeId; }
-    public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public Long getId()                     { return id; }
+
+    public String getUsername()             { return username; }
+    public void setUsername(String u)       { this.username = u; }
+
+    public String getEmail()                { return email; }
+    public void setEmail(String e)          { this.email = e; }
+
+    // TV2 dùng getPasswordHash() / setPasswordHash()
+    public String getPasswordHash()         { return passwordHash; }
+    public void setPasswordHash(String p)   { this.passwordHash = p; }
+
+    // Alias getPassword() để Spring Security UserDetails không bị lỗi
+    // (UserDetailsImpl gọi user.getPassword() → trỏ về passwordHash)
+    public String getPassword()             { return passwordHash; }
+    public void setPassword(String p) { this.passwordHash = p; }
+
+    public Role getRole()                   { return role; }
+    public void setRole(Role r)             { this.role = r; }
+
+    public UserStatus getStatus()           { return status; }
+    public void setStatus(UserStatus s)     { this.status = s; }
+
+    public Long getEmployeeId()             { return employeeId; }
+    public void setEmployeeId(Long id)      { this.employeeId = id; }
+
+    public LocalDateTime getCreatedAt()     { return createdAt; }
 }

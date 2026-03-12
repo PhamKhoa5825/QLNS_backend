@@ -2,6 +2,8 @@ package com.example.qlns.Exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -14,8 +16,8 @@ public class GlobalExceptionHandler {
     private ResponseEntity<Map<String, Object>> error(HttpStatus status, String message) {
         return ResponseEntity.status(status).body(Map.of(
                 "timestamp", LocalDateTime.now().toString(),
-                "status", status.value(),
-                "message", message
+                "status",    status.value(),
+                "message",   message
         ));
     }
 
@@ -44,12 +46,25 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
 
-    @ExceptionHandler({AttendanceException.class, LocationException.class,
-            LeaveRequestException.class})
-    public ResponseEntity<?> handleBusinessException(RuntimeException e) {
-        return error(HttpStatus.BAD_REQUEST, e.getMessage());
+    // ← Thêm: bắt đúng BadCredentialsException của Spring Security → 401
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<?> handleBadCredentials(BadCredentialsException e) {
+        return error(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
 
+    // ← Thêm: bắt các AuthenticationException khác (token hết hạn, sai format...)
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<?> handleAuthentication(AuthenticationException e) {
+        return error(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+
+    @ExceptionHandler({AttendanceException.class, LocationException.class})
+    public ResponseEntity<?> handleBusinessException(RuntimeException e) {
+        return error(HttpStatus.BAD_REQUEST, e.getMessage());
+        // ← LeaveRequestException đã xoá khỏi danh sách (v4 không còn)
+    }
+
+    // Bắt tất cả lỗi còn lại → 500
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGeneral(Exception e) {
         return error(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống: " + e.getMessage());
