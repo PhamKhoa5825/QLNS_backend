@@ -20,7 +20,7 @@ public class User {
     private String email;
 
     @Column(name = "password_hash", nullable = false)
-    private String password;        // BCrypt - TV2 xử lý
+    private String password_hash = "";        // BCrypt - TV2 xử lý
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -30,17 +30,21 @@ public class User {
     @Column(nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
 
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
     @Column(name = "employee_id")
     private Long employeeId;       // FK tới employees (không dùng @OneToOne để tránh circular)
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    public User() {}
+    public User() {
+        this.password_hash = "";
+    }
     public User(String username, String email, String password, Role role) {
         this.username = username;
         this.email = email;
-        this.password = password;
         this.role = role;
     }
 
@@ -49,12 +53,14 @@ public class User {
     public void setUsername(String username) { this.username = username; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public String getPassword() { return password_hash; }
+    public void setPassword(String password_hash) { this.password_hash = password_hash; }
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
     public UserStatus getStatus() { return status; }
     public void setStatus(UserStatus status) { this.status = status; }
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
     public Long getEmployeeId() { return employeeId; }
     public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
     public LocalDateTime getCreatedAt() { return createdAt; }
