@@ -23,6 +23,7 @@ public class AttendanceDTO {
     private Double locationLat;
     private Double locationLng;
     private String status;
+    private Integer lateMinutes;
 
     public static AttendanceDTO from(Attendance a) {
         AttendanceDTO dto = new AttendanceDTO();
@@ -38,6 +39,7 @@ public class AttendanceDTO {
             dto.employeeId = a.getEmployee().getId();
             dto.employeeName = a.getEmployee().getFullName();
         }
+        dto.lateMinutes = a.getLateMinutes();
         return dto;
     }
     public Long getId() { return id; }
@@ -50,5 +52,6 @@ public class AttendanceDTO {
     public Double getLocationLat() { return locationLat; }
     public Double getLocationLng() { return locationLng; }
     public String getStatus() { return status; }
+    public Integer getLateMinutes() { return lateMinutes; }
 }
 

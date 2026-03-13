@@ -3,6 +3,7 @@ package com.example.qlns.Controller;
 import com.example.qlns.DTO.Request.CheckInRequest;
 import com.example.qlns.DTO.Request.CheckOutRequest;
 import com.example.qlns.DTO.Response.AttendanceDTO;
+import com.example.qlns.DTO.Response.AttendanceStatsDTO;
 import com.example.qlns.Service.AttendanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -75,5 +76,14 @@ public class AttendanceController {
                         .stream()
                         .map(AttendanceDTO::from)
                         .collect(Collectors.toList()));
+    }
+
+    // GET /api/attendance/employee/{empId}/stats?month=3&year=2026
+    @GetMapping("/employee/{empId}/stats")
+    public ResponseEntity<AttendanceStatsDTO> getStats(
+            @PathVariable Long empId,
+            @RequestParam int month,
+            @RequestParam int year) {
+        return ResponseEntity.ok(attendanceService.getMonthlyStats(empId, month, year));
     }
 }

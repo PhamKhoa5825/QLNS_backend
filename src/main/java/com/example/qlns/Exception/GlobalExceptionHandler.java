@@ -58,10 +58,14 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
 
-    @ExceptionHandler({AttendanceException.class, LocationException.class})
-    public ResponseEntity<?> handleBusinessException(RuntimeException e) {
+    @ExceptionHandler(AttendanceException.class)
+    public ResponseEntity<?> handleAttendance(AttendanceException e) {
         return error(HttpStatus.BAD_REQUEST, e.getMessage());
-        // ← LeaveRequestException đã xoá khỏi danh sách (v4 không còn)
+    }
+
+    @ExceptionHandler(LocationException.class)
+    public ResponseEntity<?> handleLocation(LocationException e) {
+        return error(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     // Bắt tất cả lỗi còn lại → 500

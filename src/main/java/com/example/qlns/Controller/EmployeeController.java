@@ -2,7 +2,9 @@ package com.example.qlns.Controller;
 
 import com.example.qlns.DTO.Request.CreateEmployeeRequest;
 import com.example.qlns.DTO.Request.UpdateEmployeeRequest;
+import com.example.qlns.DTO.Response.EmployeeDetailDTO;
 import com.example.qlns.DTO.Response.EmployeeDTO;
+import com.example.qlns.DTO.Response.EmployeeSummaryDTO;
 import com.example.qlns.Entity.Employee;
 import com.example.qlns.Enum.Gender;
 import com.example.qlns.Enum.Role;
@@ -85,5 +87,21 @@ class EmployeeController {
     public ResponseEntity<Void> resign(@PathVariable Long id) {
         empService.resign(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * API Rút gọn cho trang chủ (Họ tên, Ảnh)
+     */
+    @GetMapping("/{id}/summary")
+    public ResponseEntity<EmployeeSummaryDTO> getSummary(@PathVariable Long id) {
+        return ResponseEntity.ok(empService.getEmployeeSummary(id));
+    }
+
+    /**
+     * API Chi tiết cho trang cá nhân (Đầy đủ thông tin)
+     */
+    @GetMapping("/{id}/detail")
+    public ResponseEntity<EmployeeDetailDTO> getDetail(@PathVariable Long id) {
+        return ResponseEntity.ok(empService.getEmployeeDetail(id));
     }
 }

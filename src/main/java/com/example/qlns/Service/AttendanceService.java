@@ -1,6 +1,7 @@
 package com.example.qlns.Service;
 
 import com.example.qlns.DTO.Response.AttendanceDTO;
+import com.example.qlns.DTO.Response.AttendanceStatsDTO;
 import com.example.qlns.Entity.Attendance;
 import com.example.qlns.Entity.CompanySettings;
 import com.example.qlns.Entity.Employee;
@@ -129,5 +130,33 @@ public class AttendanceService {
 
     public long countWorkingDays(Long empId, int month, int year) {
         return attendanceRepo.countWorkingDays(empId, month, year);
+    }
+
+    /**
+     * Lấy thống kê tổng hợp cho Dashboard
+     */
+    public AttendanceStatsDTO getMonthlyStats(Long empId, int month, int year) {
+        List<Attendance> attendances = getByEmployeeAndMonth(empId, month, year);
+        
+        double totalHours = attendances.stream()
+                .filter(a -> a.getWorkHours() != null)
+                .mapToDouble(a -> (double) a.getWorkHours())
+                .sum();
+
+        long onTime = attendances.stream()
+                .filter(a -> a.getStatus() == AttendanceStatus.ON_TIME)
+                .count();
+
+        long late = attendances.stream()
+                .filter(a -> a.getStatus() == AttendanceStatus.LATE)
+                .count();
+
+        double avgHours = attendances.isEmpty() ? 0 : totalHours / attendances.size();
+        
+        // Làm tròn 2 chữ số thập phân
+        totalHours = Math.round(totalHours * 100.0) / 100.0;
+        avgHours = Math.round(avgHours * 100.0) / 100.0;
+
+        return new AttendanceStatsDTO(totalHours, onTime, late, 0L, avgHours);
     }
 }

@@ -1,5 +1,7 @@
 package com.example.qlns.Service;
 
+import com.example.qlns.DTO.Response.EmployeeDetailDTO;
+import com.example.qlns.DTO.Response.EmployeeSummaryDTO;
 import com.example.qlns.Entity.Employee;
 import com.example.qlns.Entity.User;
 import com.example.qlns.Enum.EmployeeStatus;
@@ -91,5 +93,35 @@ public class EmployeeService {
         return userRepo.findByEmail(emp.getEmail())
                 .map(u -> u.getRole().name())
                 .orElse("EMPLOYEE");
+    }
+
+    /**
+     * Lấy thông tin rút gọn (Trang chủ)
+     */
+    public EmployeeSummaryDTO getEmployeeSummary(Long id) {
+        Employee emp = getById(id);
+        return new EmployeeSummaryDTO(emp.getFullName(), emp.getAvatarUrl());
+    }
+
+    /**
+     * Lấy thông tin chi tiết (Trang cá nhân/Chỉnh sửa)
+     */
+    public EmployeeDetailDTO getEmployeeDetail(Long id) {
+        Employee emp = getById(id);
+        String departmentName = (emp.getDepartment() != null) ? emp.getDepartment().getName() : "Chưa có phòng ban";
+        String role = getRoleByEmployeeId(id);
+
+        return new EmployeeDetailDTO(
+                emp.getId(),
+                emp.getFullName(),
+                emp.getAvatarUrl(),
+                emp.getPosition(),
+                departmentName,
+                emp.getEmail(),
+                emp.getPhone(),
+                emp.getAddress(),
+                role,
+                emp.getDateOfBirth()
+        );
     }
 }
