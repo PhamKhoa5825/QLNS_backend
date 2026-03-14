@@ -1,6 +1,7 @@
 package com.example.qlns.Security.Auth;
 
 import com.example.qlns.DTO.Request.AuthenticationRequest;
+import com.example.qlns.DTO.Request.ChangePasswordRequest;
 import com.example.qlns.DTO.Request.UserRegistrationRequest;
 import com.example.qlns.DTO.Response.AuthenticationResponse;
 import com.example.qlns.Entity.User;
@@ -145,6 +146,46 @@ public class AuthService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * Change user password
+     * Validates old password, checks that new password matches confirm password
+     * Then updates password in database
+     * 
+     * @param username the username of the user changing password
+     * @param request contains old password, new password, and confirm password
+     * @return success message
+     */
+    @Transactional
+    public String changePassword(String username, ChangePasswordRequest request) {
+        // Validate that new password and confirm password match
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new BadCredentialsException("New password and confirm password do not match");
+        }
+
+        // Validate that new password is not same as old password
+        if (request.getOldPassword().equals(request.getNewPassword())) {
+            throw new BadCredentialsException("New password must be different from old password");
+        }
+
+        // Find user by username
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Verify old password
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
+            throw new BadCredentialsException("Old password is incorrect");
+        }
+
+        // Encode new password
+        String encodedPassword = passwordEncoder.encode(request.getNewPassword());
+
+        // Update password
+        user.setPasswordHash(encodedPassword);
+        userRepository.save(user);
+
+        return "Password changed successfully";
     }
 }
 
