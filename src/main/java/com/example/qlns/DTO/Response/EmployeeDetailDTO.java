@@ -2,10 +2,8 @@ package com.example.qlns.DTO.Response;
 
 import java.time.LocalDate;
 
-/**
- * Employee Detail DTO
- * Trả về thông tin đầy đủ cho trang cá nhân và chỉnh sửa
- */
+// DTO chi tiết nhân viên
+// Trả về thông tin đầy đủ cho trang cá nhân và chỉnh sửa
 public class EmployeeDetailDTO {
     private Long id;
     private String fullName;

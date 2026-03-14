@@ -1,9 +1,7 @@
 package com.example.qlns.DTO.Response;
 
-/**
- * Employee Summary DTO
- * Trả về thông tin rút gọn cho trang chủ (Chỉ gồm Họ tên và Ảnh)
- */
+// DTO tóm tắt nhân viên
+// Trả về thông tin rút gọn cho trang chủ (Chỉ gồm Họ tên và Ảnh)
 public class EmployeeSummaryDTO {
     private String fullName;
     private String avatarUrl;

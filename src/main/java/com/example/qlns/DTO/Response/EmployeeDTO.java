@@ -16,7 +16,7 @@ public class EmployeeDTO {
     private String status;
     private Long departmentId;
     private String departmentName;
-    private String role;            // Từ bảng users
+    private String role;            // Từ bảng người dùng
 
     public static EmployeeDTO from(Employee emp, String role) {
         EmployeeDTO dto = new EmployeeDTO();

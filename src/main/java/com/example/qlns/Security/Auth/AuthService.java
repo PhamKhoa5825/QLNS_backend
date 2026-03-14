@@ -1,6 +1,7 @@
 package com.example.qlns.Security.Auth;
 
 import com.example.qlns.DTO.Request.AuthenticationRequest;
+import com.example.qlns.DTO.Request.ChangePasswordRequest;
 import com.example.qlns.DTO.Request.UserRegistrationRequest;
 import com.example.qlns.DTO.Response.AuthenticationResponse;
 import com.example.qlns.Entity.User;
@@ -20,10 +21,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Authentication Service
- * Handles user login and registration with JWT token generation
- */
+// Dịch vụ xác thực
+// Xử lý đăng nhập và đăng ký người dùng với việc tạo JWT token
 @Service
 public class AuthService {
 
@@ -39,12 +38,10 @@ public class AuthService {
     @Autowired
     private JwtService jwtService;
 
-    /**
-     * Authenticate user and generate JWT token
-     */
+    // Xác thực người dùng và tạo JWT token
     public AuthenticationResponse login(AuthenticationRequest request) throws AuthenticationException {
         try {
-            // Authenticate user
+            // Xác thực thông tin người dùng
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getUsername(),
@@ -52,17 +49,17 @@ public class AuthService {
                     )
             );
 
-            // Get authenticated user
+            // Lấy thông tin người dùng đã xác thực
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-            // Generate JWT token
+            // Tạo JWT token
             String token = jwtService.generateToken(userDetails);
 
-            // Fetch user from database to get email
+            // Lấy người dùng từ database để lấy email
             User user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
-            // Return authentication response
+            // Trả về kết quả xác thực
             return new AuthenticationResponse(
                     token,
                     user.getId(),
@@ -72,39 +69,37 @@ public class AuthService {
             );
 
         } catch (AuthenticationException e) {
-            throw new BadCredentialsException("Invalid username or password", e);
+            throw new BadCredentialsException("Tên đăng nhập hoặc mật khẩu không chính xác", e);
         }
     }
 
-    /**
-     * Register new user
-     * Validates that username and email are not already in use
-     * Hashes password using BCrypt
-     */
+    // Đăng ký người dùng mới
+    // Kiểm tra tên đăng nhập và email không bị trùng
+    // Mã hóa mật khẩu bằng BCrypt
     @Transactional
     public AuthenticationResponse register(UserRegistrationRequest request) {
-        // Check if username already exists
+        // Kiểm tra xem tên đăng nhập đã tồn tại chưa
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new DuplicateException("Username already taken: " + request.getUsername());
+            throw new DuplicateException("Tên đăng nhập đã được sử dụng: " + request.getUsername());
         }
 
-        // Check if email already exists
+        // Kiểm tra xem email đã được đăng ký chưa
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new DuplicateException("Email already registered: " + request.getEmail());
+            throw new DuplicateException("Email đã được đăng ký: " + request.getEmail());
         }
 
-        // Create new user
+        // Tạo người dùng mới
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword())); // Hash password
+        user.setPassword(passwordEncoder.encode(request.getPassword())); // Mã hóa mật khẩu
         user.setRole(request.getRole());
         user.setStatus(UserStatus.ACTIVE);
 
-        // Save user to database
+        // Lưu người dùng vào database
         User savedUser = userRepository.save(user);
 
-        // Create UserDetailsImpl
+        // Tạo UserDetailsImpl
         UserDetailsImpl userDetails = new UserDetailsImpl(
                 savedUser.getId(),
                 savedUser.getUsername(),
@@ -112,10 +107,10 @@ public class AuthService {
                 savedUser.getRole()
         );
 
-        // Generate JWT token
+        // Tạo JWT token
         String token = jwtService.generateToken(userDetails);
 
-        // Return authentication response
+        // Trả về kết quả xác thực
         return new AuthenticationResponse(
                 token,
                 savedUser.getId(),
@@ -125,14 +120,12 @@ public class AuthService {
         );
     }
 
-    /**
-     * Validate JWT token
-     */
+    // Kiểm tra tính hợp lệ của JWT token
     public boolean validateToken(String token) {
         try {
             String username = jwtService.extractUsername(token);
             User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
             UserDetailsImpl userDetails = new UserDetailsImpl(
                     user.getId(),
@@ -145,6 +138,23 @@ public class AuthService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    // Thay đổi mật khẩu người dùng
+    // Kiểm tra mật khẩu cũ trước khi cập nhật mật khẩu mới đã mã hóa
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+
+        // Kiểm tra mật khẩu cũ
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
+            throw new BadCredentialsException("Mật khẩu cũ không chính xác");
+        }
+
+        // Cập nhật mật khẩu mới
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }
 

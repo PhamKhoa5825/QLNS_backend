@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 // =============================================
-// TV1 - EmployeeController
+// TV1 - Bộ điều khiển Nhân viên
 // =============================================
 @RestController
 @RequestMapping("/api/employees")
@@ -72,15 +72,16 @@ class EmployeeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EmployeeDTO> update(@PathVariable Long id, @RequestBody UpdateEmployeeRequest req) {
+    public ResponseEntity<EmployeeDetailDTO> update(@PathVariable Long id, @RequestBody UpdateEmployeeRequest req) {
         Employee emp = new Employee();
-        emp.setFullName(req.getFullName());
+        emp.setEmail(req.getEmail());
         emp.setPhone(req.getPhone());
         emp.setAddress(req.getAddress());
         emp.setPosition(req.getPosition());
         emp.setAvatarUrl(req.getAvatarUrl());
-        Employee updated = empService.update(id, emp);
-        return ResponseEntity.ok(EmployeeDTO.from(updated, empService.getRoleByEmployeeId(id)));
+        
+        empService.update(id, emp);
+        return ResponseEntity.ok(empService.getEmployeeDetail(id));
     }
 
     @PutMapping("/{id}/resign")
@@ -89,17 +90,13 @@ class EmployeeController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * API Rút gọn cho trang chủ (Họ tên, Ảnh)
-     */
+    // API Rút gọn cho trang chủ (Họ tên, Ảnh)
     @GetMapping("/{id}/summary")
     public ResponseEntity<EmployeeSummaryDTO> getSummary(@PathVariable Long id) {
         return ResponseEntity.ok(empService.getEmployeeSummary(id));
     }
 
-    /**
-     * API Chi tiết cho trang cá nhân (Đầy đủ thông tin)
-     */
+    // API Chi tiết cho trang cá nhân (Đầy đủ thông tin)
     @GetMapping("/{id}/detail")
     public ResponseEntity<EmployeeDetailDTO> getDetail(@PathVariable Long id) {
         return ResponseEntity.ok(empService.getEmployeeDetail(id));

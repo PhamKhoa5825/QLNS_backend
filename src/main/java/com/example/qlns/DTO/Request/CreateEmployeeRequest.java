@@ -7,8 +7,8 @@ public class CreateEmployeeRequest {
     private String password;
     private String phone;
     private String address;
-    private String dateOfBirth;     // "yyyy-MM-dd"
-    private String gender;          // MALE / FEMALE / OTHER
+    private String dateOfBirth;     // "ngày-tháng-năm" (yyyy-MM-dd)
+    private String gender;          // NAM / NỮ / KHÁC
     private String position;
     private String joinDate;
     private Long departmentId;

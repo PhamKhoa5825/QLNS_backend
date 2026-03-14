@@ -14,11 +14,10 @@ import com.example.qlns.Repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 
 // =============================================
-// TV1 - EmployeeService
+// TV1 - Dịch vụ Nhân viên
 // =============================================
 @Service
 public class EmployeeService {
@@ -51,7 +50,7 @@ public class EmployeeService {
     public Employee create(Employee emp, String email, String password, Role role) {
         if (userRepo.existsByEmail(email))
             throw new DuplicateException("Email đã được sử dụng: " + email);
-        // TV2 sẽ inject PasswordEncoder và mã hóa password
+        // Sẽ được mã hóa bằng PasswordEncoder
         User user = new User(email.split("@")[0], email, password, role);
         user = userRepo.save(user);
 
@@ -67,12 +66,28 @@ public class EmployeeService {
     @Transactional
     public Employee update(Long id, Employee req) {
         Employee emp = getById(id);
+        String oldEmail = emp.getEmail();
+
         if (req.getFullName() != null) emp.setFullName(req.getFullName());
         if (req.getPhone() != null) emp.setPhone(req.getPhone());
         if (req.getAddress() != null) emp.setAddress(req.getAddress());
         if (req.getPosition() != null) emp.setPosition(req.getPosition());
         if (req.getDepartment() != null) emp.setDepartment(req.getDepartment());
         if (req.getAvatarUrl() != null) emp.setAvatarUrl(req.getAvatarUrl());
+        
+        if (req.getEmail() != null && !req.getEmail().equals(oldEmail)) {
+            // Kiểm tra email mới đã tồn tại chưa
+            if (userRepo.existsByEmail(req.getEmail())) {
+                throw new DuplicateException("Email đã được sử dụng: " + req.getEmail());
+            }
+            emp.setEmail(req.getEmail());
+            // Đồng bộ sang User
+            userRepo.findByEmail(oldEmail).ifPresent(u -> {
+                u.setEmail(req.getEmail());
+                userRepo.save(u);
+            });
+        }
+        
         return empRepo.save(emp);
     }
 
@@ -95,17 +110,13 @@ public class EmployeeService {
                 .orElse("EMPLOYEE");
     }
 
-    /**
-     * Lấy thông tin rút gọn (Trang chủ)
-     */
+    // Lấy thông tin rút gọn (Trang chủ)
     public EmployeeSummaryDTO getEmployeeSummary(Long id) {
         Employee emp = getById(id);
         return new EmployeeSummaryDTO(emp.getFullName(), emp.getAvatarUrl());
     }
 
-    /**
-     * Lấy thông tin chi tiết (Trang cá nhân/Chỉnh sửa)
-     */
+    // Lấy thông tin chi tiết (Trang cá nhân/Chỉnh sửa)
     public EmployeeDetailDTO getEmployeeDetail(Long id) {
         Employee emp = getById(id);
         String departmentName = (emp.getDepartment() != null) ? emp.getDepartment().getName() : "Chưa có phòng ban";
