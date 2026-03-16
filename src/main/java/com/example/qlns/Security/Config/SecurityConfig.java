@@ -83,7 +83,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/attendance/checkin").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/attendance/checkout").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers("/api/attendance/employee/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
-                        .requestMatchers("/api/attendance/today").hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers("/api/attendance/today").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
 
                         // 3. Requests (Đơn từ) - Khớp với RequestController
                         .requestMatchers(HttpMethod.GET, "/api/requests/employee/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
