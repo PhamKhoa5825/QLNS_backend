@@ -15,9 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
-// =============================================
-// TV1 - EmployeeService
-// =============================================
 @Service
 public class EmployeeService {
     private final EmployeeRepository empRepo;
@@ -49,7 +46,7 @@ public class EmployeeService {
     public Employee create(Employee emp, String email, String password, Role role) {
         if (userRepo.existsByEmail(email))
             throw new DuplicateException("Email đã được sử dụng: " + email);
-        // TV2 sẽ inject PasswordEncoder và mã hóa password
+
         User user = new User(email.split("@")[0], email, password, role);
         user = userRepo.save(user);
 
@@ -74,14 +71,29 @@ public class EmployeeService {
         return empRepo.save(emp);
     }
 
+    /** Cho nghỉ việc: Employee → RESIGNED, User → INACTIVE */
     @Transactional
     public void resign(Long id) {
         Employee emp = getById(id);
         emp.setStatus(EmployeeStatus.RESIGNED);
         empRepo.save(emp);
-        // Vô hiệu hóa tài khoản
+
         userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
             u.setStatus(UserStatus.INACTIVE);
+            userRepo.save(u);
+        });
+    }
+
+    /** Khôi phục nhân viên: Employee → ACTIVE, User → ACTIVE */
+    @Transactional
+    public void reactivate(Long id) {
+        Employee emp = getById(id);
+        emp.setStatus(EmployeeStatus.ACTIVE);
+        empRepo.save(emp);
+
+        // Kích hoạt lại tài khoản đăng nhập
+        userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
+            u.setStatus(UserStatus.ACTIVE);
             userRepo.save(u);
         });
     }

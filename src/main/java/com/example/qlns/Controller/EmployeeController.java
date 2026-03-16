@@ -14,9 +14,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// =============================================
-// TV1 - EmployeeController
-// =============================================
 @RestController
 @RequestMapping("/api/employees")
 class EmployeeController {
@@ -81,9 +78,17 @@ class EmployeeController {
         return ResponseEntity.ok(EmployeeDTO.from(updated, empService.getRoleByEmployeeId(id)));
     }
 
+    /** Cho nghỉ việc: PUT /api/employees/{id}/resign */
     @PutMapping("/{id}/resign")
     public ResponseEntity<Void> resign(@PathVariable Long id) {
         empService.resign(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Khôi phục nhân viên: PUT /api/employees/{id}/reactivate */
+    @PutMapping("/{id}/reactivate")
+    public ResponseEntity<Void> reactivate(@PathVariable Long id) {
+        empService.reactivate(id);
         return ResponseEntity.noContent().build();
     }
 }

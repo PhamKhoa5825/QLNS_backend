@@ -4,6 +4,7 @@ import com.example.qlns.Entity.Request;
 import com.example.qlns.Enum.RequestStatus;
 
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 // ── Request DTO (trả về Android) ──────────────────────────────
 public class RequestDTO {
@@ -20,7 +21,10 @@ public class RequestDTO {
     private Long reviewedById;
     private String reviewedByName;
     private String rejectionReason;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 
     public static RequestDTO from(Request r) {
