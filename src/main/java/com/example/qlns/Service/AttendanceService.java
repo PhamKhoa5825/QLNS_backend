@@ -61,13 +61,13 @@ public class AttendanceService {
         double distance = haversine(lat, lng, settings.getBaseLat(), settings.getBaseLng());
         if (distance > settings.getAllowedRadius())
             throw new LocationException(String.format(
-                    "Ngoài phạm vi %.0fm (bạn cách văn phòng %.0fm)",
+                    "Ngoài phạm vi %dm (bạn cách văn phòng %.0fm)",
                     settings.getAllowedRadius(), distance));
 
         // Tính trạng thái và số phút trễ
         LocalTime startTime    = LocalTime.parse(settings.getWorkStartTime()); // "08:00"
         LocalTime nowTime      = LocalTime.now();
-        int lateMinutes        = 0;
+        Integer lateMinutes    = 0;  // ← Thay đổi từ int thành Integer
         AttendanceStatus status = AttendanceStatus.ON_TIME;
 
         if (nowTime.isAfter(startTime)) {
