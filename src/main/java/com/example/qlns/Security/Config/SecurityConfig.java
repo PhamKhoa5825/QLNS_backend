@@ -106,6 +106,7 @@ public class SecurityConfig {
 
                         // 6. Employees & Departments (Quản lý nhân sự/phòng ban)
                         .requestMatchers(HttpMethod.GET, "/api/employees/{id}/detail").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/employees/{id}/summary").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/employees/**").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/employees/**").hasRole("ADMIN") // Chỉ Admin mới tạo được NV
                         .requestMatchers("/api/departments/**").hasAnyRole("MANAGER", "ADMIN")
