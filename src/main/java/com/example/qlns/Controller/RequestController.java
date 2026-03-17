@@ -2,6 +2,9 @@ package com.example.qlns.Controller;
 
 import com.example.qlns.DTO.Request.*;
 import com.example.qlns.DTO.Response.*;
+import com.example.qlns.Entity.User;
+import com.example.qlns.Repository.UserRepository;
+import com.example.qlns.Security.SecurityService;
 import com.example.qlns.Service.RequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +17,10 @@ import java.util.List;
 public class RequestController {
 
     @Autowired private RequestService requestService;
+    @Autowired private SecurityService securityService;
+    @Autowired private UserRepository userRepo;
 
     // ── Nhân viên: xem đơn của mình ──────────────────────────
-    // GET /api/requests/employee/{empId}
     @GetMapping("/employee/{empId}")
     public ResponseEntity<List<RequestDTO>> getMyRequests(
             @PathVariable Long empId) {
@@ -24,7 +28,6 @@ public class RequestController {
     }
 
     // ── Nhân viên: tạo đơn ───────────────────────────────────
-    // POST /api/requests/employee/{empId}
     @PostMapping("/employee/{empId}")
     public ResponseEntity<RequestDTO> createRequest(
             @PathVariable Long empId,
@@ -33,7 +36,6 @@ public class RequestController {
     }
 
     // ── Nhân viên: sửa đơn ───────────────────────────────────
-    // PUT /api/requests/{id}/employee/{empId}
     @PutMapping("/{id}/employee/{empId}")
     public ResponseEntity<RequestDTO> updateRequest(
             @PathVariable Long id,
@@ -43,7 +45,6 @@ public class RequestController {
     }
 
     // ── Nhân viên: huỷ đơn ───────────────────────────────────
-    // DELETE /api/requests/{id}/employee/{empId}
     @DeleteMapping("/{id}/employee/{empId}")
     public ResponseEntity<Void> cancelRequest(
             @PathVariable Long id,
@@ -53,23 +54,37 @@ public class RequestController {
     }
 
     // ── Manager: xem tất cả đơn phòng ban ────────────────────
-    // GET /api/requests/department/{deptId}
     @GetMapping("/department/{deptId}")
     public ResponseEntity<List<RequestDTO>> getByDepartment(
             @PathVariable Long deptId) {
+        securityService.validateManagerDepartment(deptId);
         return ResponseEntity.ok(requestService.getByDepartment(deptId));
     }
 
+    // ── Manager: lọc đơn phòng ban theo trạng thái ──────────
+    @GetMapping("/department/{deptId}/status")
+    public ResponseEntity<List<RequestDTO>> getByDepartmentAndStatus(
+            @PathVariable Long deptId,
+            @RequestParam String status) {
+        securityService.validateManagerDepartment(deptId);
+        return ResponseEntity.ok(requestService.getByDepartmentAndStatus(deptId, status));
+    }
+
     // ── Manager: đơn chờ duyệt phòng ban ─────────────────────
-    // GET /api/requests/department/{deptId}/pending
     @GetMapping("/department/{deptId}/pending")
     public ResponseEntity<List<RequestDTO>> getPendingByDepartment(
             @PathVariable Long deptId) {
+        securityService.validateManagerDepartment(deptId);
         return ResponseEntity.ok(requestService.getPendingByDepartment(deptId));
     }
 
+    // ── Xem chi tiết đơn ──────────────────────────────────────
+    @GetMapping("/{id}")
+    public ResponseEntity<RequestDTO> getRequestById(@PathVariable Long id) {
+        return ResponseEntity.ok(requestService.getRequestById(id));
+    }
+
     // ── Manager/Admin: duyệt hoặc từ chối ────────────────────
-    // PUT /api/requests/{id}/review/employee/{reviewerId}
     @PutMapping("/{id}/review/employee/{reviewerId}")
     public ResponseEntity<RequestDTO> reviewRequest(
             @PathVariable Long id,
@@ -78,10 +93,33 @@ public class RequestController {
         return ResponseEntity.ok(requestService.reviewRequest(id, reviewerId, req));
     }
 
+    // ── Endpoint để App gọi đơn giản (Dùng trong RequestActivity.java) ──
+    @PutMapping("/{id}/status")
+    public ResponseEntity<RequestDTO> updateRequestStatus(
+            @PathVariable Long id,
+            @RequestParam String status) {
+        Long reviewerUserId = securityService.getCurrentUserId();
+        User user = userRepo.findById(reviewerUserId).orElseThrow();
+        Long reviewerId = user.getEmployeeId();
+
+        ReviewRequestRequest reviewRequest = new ReviewRequestRequest();
+        reviewRequest.setApproved("APPROVED".equalsIgnoreCase(status));
+        if (!reviewRequest.isApproved()) {
+            reviewRequest.setRejectionReason("Từ chối bởi quản lý");
+        }
+
+        return ResponseEntity.ok(requestService.reviewRequest(id, reviewerId, reviewRequest));
+    }
+
     // ── Admin: xem tất cả đơn ────────────────────────────────
-    // GET /api/requests
     @GetMapping
     public ResponseEntity<List<RequestDTO>> getAllRequests() {
         return ResponseEntity.ok(requestService.getAllRequests());
+    }
+
+    // ── Admin: lọc tất cả đơn theo trạng thái ──────────────
+    @GetMapping("/status")
+    public ResponseEntity<List<RequestDTO>> getAllRequestsByStatus(@RequestParam String status) {
+        return ResponseEntity.ok(requestService.getAllRequestsByStatus(status));
     }
 }

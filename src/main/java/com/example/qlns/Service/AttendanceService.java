@@ -2,10 +2,12 @@ package com.example.qlns.Service;
 
 import com.example.qlns.DTO.Response.AttendanceDTO;
 import com.example.qlns.DTO.Response.AttendanceStatsDTO;
+import com.example.qlns.DTO.Response.EmployeeAttendanceStatsDTO;
 import com.example.qlns.Entity.Attendance;
 import com.example.qlns.Entity.CompanySettings;
 import com.example.qlns.Entity.Employee;
 import com.example.qlns.Enum.AttendanceStatus;
+import com.example.qlns.Enum.EmployeeStatus;
 import com.example.qlns.Exception.AttendanceException;
 import com.example.qlns.Exception.LocationException;
 import com.example.qlns.Exception.ResourceNotFoundException;
@@ -21,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AttendanceService {
@@ -29,7 +32,6 @@ public class AttendanceService {
     @Autowired private EmployeeRepository empRepo;
     @Autowired private CompanySettingsRepository settingsRepo;
 
-    // ── Haversine: tính khoảng cách (mét) giữa 2 toạ độ ─────
     private double haversine(double lat1, double lng1, double lat2, double lng2) {
         final int R = 6371000;
         double dLat = Math.toRadians(lat2 - lat1);
@@ -40,13 +42,11 @@ public class AttendanceService {
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    // ── Lấy settings, ném lỗi nếu chưa cấu hình ─────────────
     private CompanySettings getSettings() {
         return settingsRepo.findById(1L)
                 .orElseThrow(() -> new ResourceNotFoundException("Chưa cấu hình công ty"));
     }
 
-    // ── CHECK IN ─────────────────────────────────────────────
     @Transactional
     public AttendanceDTO checkIn(Long employeeId, Double lat, Double lng) {
         Employee emp = empRepo.findById(employeeId)
@@ -56,18 +56,20 @@ public class AttendanceService {
         if (attendanceRepo.existsByEmployeeIdAndDate(employeeId, today))
             throw new AttendanceException("Đã chấm công hôm nay rồi");
 
-        // Kiểm tra GPS
         CompanySettings settings = getSettings();
-        double distance = haversine(lat, lng, settings.getBaseLat(), settings.getBaseLng());
-        if (distance > settings.getAllowedRadius())
-            throw new LocationException(String.format(
-                    "Ngoài phạm vi %dm (bạn cách văn phòng %.0fm)",
-                    settings.getAllowedRadius(), distance));
+        
+        // GPS Check (from Employee App)
+        if (lat != null && lng != null) {
+            double distance = haversine(lat, lng, settings.getBaseLat(), settings.getBaseLng());
+            if (distance > settings.getAllowedRadius())
+                throw new LocationException(String.format(
+                        "Ngoài phạm vi %dm (bạn cách văn phòng %.0fm)",
+                        settings.getAllowedRadius(), distance));
+        }
 
-        // Tính trạng thái và số phút trễ
-        LocalTime startTime    = LocalTime.parse(settings.getWorkStartTime()); // "08:00"
+        LocalTime startTime    = LocalTime.parse(settings.getWorkStartTime());
         LocalTime nowTime      = LocalTime.now();
-        Integer lateMinutes    = 0;  // ← Thay đổi từ int thành Integer
+        Integer lateMinutes    = 0;
         AttendanceStatus status = AttendanceStatus.ON_TIME;
 
         if (nowTime.isAfter(startTime)) {
@@ -87,7 +89,6 @@ public class AttendanceService {
         return AttendanceDTO.from(attendanceRepo.save(att));
     }
 
-    // ── CHECK OUT ────────────────────────────────────────────
     @Transactional
     public AttendanceDTO checkOut(Long employeeId) {
         Attendance att = attendanceRepo
@@ -97,9 +98,8 @@ public class AttendanceService {
         if (att.getCheckOut() != null)
             throw new AttendanceException("Bạn đã check-out rồi");
 
-        // Chỉ cho check-out sau giờ tan ca
         CompanySettings settings = getSettings();
-        LocalTime endTime = LocalTime.parse(settings.getWorkEndTime()); // "17:30"
+        LocalTime endTime = LocalTime.parse(settings.getWorkEndTime());
         if (LocalTime.now().isBefore(endTime))
             throw new AttendanceException(
                     "Chưa đến giờ check-out. Giờ tan ca: " + settings.getWorkEndTime());
@@ -113,13 +113,16 @@ public class AttendanceService {
         return AttendanceDTO.from(attendanceRepo.save(att));
     }
 
-    // ── QUERY ────────────────────────────────────────────────
     public List<Attendance> getByEmployee(Long empId) {
         return attendanceRepo.findByEmployeeId(empId);
     }
 
     public List<Attendance> getByDate(LocalDate date) {
         return attendanceRepo.findByDate(date);
+    }
+    
+    public List<Attendance> getByDateAndDepartment(LocalDate date, Long deptId) {
+        return attendanceRepo.findByDateAndEmployeeDepartmentId(date, deptId);
     }
 
     public List<Attendance> getByEmployeeAndMonth(Long empId, int month, int year) {
@@ -128,12 +131,8 @@ public class AttendanceService {
         return attendanceRepo.findByEmployeeIdAndDateBetween(empId, from, to);
     }
 
-    public long countWorkingDays(Long empId, int month, int year) {
-        return attendanceRepo.countWorkingDays(empId, month, year);
-    }
-
     /**
-     * Lấy thống kê tổng hợp cho Dashboard
+     * Lấy thống kê tổng hợp cho Dashboard (Manager/Employee)
      */
     public AttendanceStatsDTO getMonthlyStats(Long empId, int month, int year) {
         List<Attendance> attendances = getByEmployeeAndMonth(empId, month, year);
@@ -151,12 +150,28 @@ public class AttendanceService {
                 .filter(a -> a.getStatus() == AttendanceStatus.LATE)
                 .count();
 
+        // Absent logic: 22 working days minus (onTime + late)
+        long absent = Math.max(0, 22 - (onTime + late));
+
         double avgHours = attendances.isEmpty() ? 0 : totalHours / attendances.size();
         
-        // Làm tròn 2 chữ số thập phân
         totalHours = Math.round(totalHours * 100.0) / 100.0;
         avgHours = Math.round(avgHours * 100.0) / 100.0;
 
-        return new AttendanceStatsDTO(totalHours, onTime, late, 0L, avgHours);
+        return new AttendanceStatsDTO(totalHours, onTime, late, absent, avgHours);
+    }
+
+    public List<EmployeeAttendanceStatsDTO> getDepartmentStats(Long deptId, int month, int year) {
+        List<Employee> employees = empRepo.findByDepartmentIdAndStatus(deptId, EmployeeStatus.ACTIVE);
+        return employees.stream().map(emp -> {
+            long onTime = attendanceRepo.countByEmployeeAndStatus(emp.getId(), month, year, AttendanceStatus.ON_TIME);
+            long late = attendanceRepo.countByEmployeeAndStatus(emp.getId(), month, year, AttendanceStatus.LATE);
+            long absent = Math.max(0, 22 - (onTime + late));
+            return new EmployeeAttendanceStatsDTO(emp.getId(), emp.getFullName(), onTime, late, absent);
+        }).collect(Collectors.toList());
+    }
+
+    public long countWorkingDays(Long empId, int month, int year) {
+        return attendanceRepo.countWorkingDays(empId, month, year);
     }
 }

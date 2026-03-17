@@ -8,6 +8,7 @@ import com.example.qlns.DTO.Response.EmployeeSummaryDTO;
 import com.example.qlns.Entity.Employee;
 import com.example.qlns.Enum.Gender;
 import com.example.qlns.Enum.Role;
+import com.example.qlns.Security.SecurityService;
 import com.example.qlns.Service.EmployeeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,23 +17,25 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// =============================================
-// TV1 - EmployeeController
-// =============================================
 @RestController
 @RequestMapping("/api/employees")
-class EmployeeController {
+public class EmployeeController {
     private final EmployeeService empService;
+    private final SecurityService securityService;
 
-    EmployeeController(EmployeeService empService) {
+    EmployeeController(EmployeeService empService, SecurityService securityService) {
         this.empService = empService;
+        this.securityService = securityService;
     }
 
     @GetMapping
     public ResponseEntity<List<EmployeeDTO>> getAll() {
-        return ResponseEntity.ok(empService.getAll().stream()
-                .map(e -> EmployeeDTO.from(e, empService.getRoleByEmployeeId(e.getId())))
-                .collect(Collectors.toList()));
+        // Admin xem tất cả, Manager chỉ xem phòng ban mình
+        if (securityService.isAdmin()) {
+            return ResponseEntity.ok(empService.getAll());
+        }
+        Long deptId = securityService.getManagerDepartmentId();
+        return ResponseEntity.ok(empService.getByDepartment(deptId));
     }
 
     @GetMapping("/{id}")
@@ -43,9 +46,9 @@ class EmployeeController {
 
     @GetMapping("/department/{deptId}")
     public ResponseEntity<List<EmployeeDTO>> getByDepartment(@PathVariable Long deptId) {
-        return ResponseEntity.ok(empService.getByDepartment(deptId).stream()
-                .map(e -> EmployeeDTO.from(e, empService.getRoleByEmployeeId(e.getId())))
-                .collect(Collectors.toList()));
+        // Manager chỉ xem được NV phòng ban mình, Admin xem tất cả
+        securityService.validateManagerDepartment(deptId);
+        return ResponseEntity.ok(empService.getByDepartment(deptId));
     }
 
     @GetMapping("/search")
@@ -66,7 +69,9 @@ class EmployeeController {
         if (req.getDateOfBirth() != null) emp.setDateOfBirth(LocalDate.parse(req.getDateOfBirth()));
         if (req.getGender() != null) emp.setGender(Gender.valueOf(req.getGender()));
 
-        Role role = Role.EMPLOYEE;
+        Role role = Role.EMPLOYEE; 
+        // Note: Creation usually defaults to EMPLOYEE unless specified. 
+        // Admin app might want to choose, but create() here is simplified.
         Employee saved = empService.create(emp, req.getEmail(), req.getPassword(), role);
         return ResponseEntity.ok(EmployeeDTO.from(saved, role.name()));
     }
@@ -90,7 +95,7 @@ class EmployeeController {
     }
 
     /**
-     * API Rút gọn cho trang chủ (Họ tên, Ảnh)
+     * API Rút gọn cho trang chủ (Employee App)
      */
     @GetMapping("/{id}/summary")
     public ResponseEntity<EmployeeSummaryDTO> getSummary(@PathVariable Long id) {
@@ -98,7 +103,7 @@ class EmployeeController {
     }
 
     /**
-     * API Chi tiết cho trang cá nhân (Đầy đủ thông tin)
+     * API Chi tiết cho trang cá nhân (Employee App)
      */
     @GetMapping("/{id}/detail")
     public ResponseEntity<EmployeeDetailDTO> getDetail(@PathVariable Long id) {

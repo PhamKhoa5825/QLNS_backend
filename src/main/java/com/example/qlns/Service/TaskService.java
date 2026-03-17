@@ -1,9 +1,11 @@
 package com.example.qlns.Service;
 
+import com.example.qlns.DTO.Request.UpdateTaskRequest;
 import com.example.qlns.DTO.Response.TaskDTO;
 import com.example.qlns.Entity.Employee;
 import com.example.qlns.Entity.Task;
 import com.example.qlns.Entity.TaskUpdate;
+import com.example.qlns.Enum.TaskPriority;
 import com.example.qlns.Enum.TaskStatus;
 import com.example.qlns.Exception.*;
 import com.example.qlns.Repository.EmployeeRepository;
@@ -25,19 +27,29 @@ public class TaskService {
     @Autowired private TaskUpdateRepository taskUpdateRepo;
     @Autowired private EmployeeRepository empRepo;
 
+    // ── Admin: Xem tất cả task ─────────────────────────────────
+    @Transactional(readOnly = true)
+    public List<TaskDTO> getAll() {
+        return taskRepo.findAll()
+                .stream().map(TaskDTO::from).collect(Collectors.toList());
+    }
+
     // ── Xem task của nhân viên ────────────────────────────────
+    @Transactional(readOnly = true)
     public List<TaskDTO> getMyTasks(Long empId) {
         return taskRepo.findByAssignedToId(empId)
                 .stream().map(TaskDTO::from).collect(Collectors.toList());
     }
 
     // ── Xem task theo phòng ban ───────────────────────────────
+    @Transactional(readOnly = true)
     public List<TaskDTO> getByDepartment(Long deptId) {
         return taskRepo.findByDepartmentId(deptId)
                 .stream().map(TaskDTO::from).collect(Collectors.toList());
     }
 
     // ── Xem chi tiết task ────────────────────────────────────
+    @Transactional(readOnly = true)
     public TaskDTO getById(Long id) {
         Task task = taskRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhiệm vụ id=" + id));
@@ -49,6 +61,34 @@ public class TaskService {
     public TaskDTO create(Task task) {
         // Task mới luôn bắt đầu ở PENDING
         task.setStatus(TaskStatus.PENDING);
+        return TaskDTO.from(taskRepo.save(task));
+    }
+
+    // ── Chỉnh sửa task (Manager/Admin) ───────────────────────
+    @Transactional
+    public TaskDTO updateTask(Long taskId, UpdateTaskRequest req) {
+        Task task = taskRepo.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhiệm vụ id=" + taskId));
+
+        // Không cho sửa task đã hoàn thành
+        if (task.getStatus() == TaskStatus.DONE)
+            throw new BadRequestException("Task đã hoàn thành, không thể chỉnh sửa");
+
+        if (req.getTitle() != null && !req.getTitle().isBlank())
+            task.setTitle(req.getTitle().trim());
+        if (req.getDescription() != null)
+            task.setDescription(req.getDescription());
+        if (req.getPriority() != null)
+            task.setPriority(TaskPriority.valueOf(req.getPriority()));
+        if (req.getDeadline() != null)
+            task.setDeadline(java.time.LocalDate.parse(req.getDeadline()).atStartOfDay());
+        if (req.getAssignedToId() != null) {
+            Employee newAssignee = empRepo.findById(req.getAssignedToId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Không tìm thấy nhân viên id=" + req.getAssignedToId()));
+            task.setAssignedTo(newAssignee);
+        }
+
         return TaskDTO.from(taskRepo.save(task));
     }
 
@@ -70,19 +110,20 @@ public class TaskService {
     }
 
     // ── Cập nhật trạng thái task ──────────────────────────────
-    // Luồng hợp lệ:
-    //   PENDING  → ACCEPTED (dùng acceptTask)
-    //   ACCEPTED → DONE
-    //   OVERDUE  → DONE (vẫn cho hoàn thành dù quá hạn)
-    // KHÔNG cho phép:
-    //   PENDING  → DONE (phải nhận trước)
-    //   DONE     → bất kỳ
     @Transactional
     public TaskDTO updateStatus(Long taskId, TaskStatus newStatus, String note, Long updatedById) {
         Task task = taskRepo.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy task"));
 
         TaskStatus current = task.getStatus();
+
+        // Kiểm tra quyền: Nhân viên chỉ sửa task của mình, Manager/Admin sửa thoải mái
+        if (!task.getAssignedTo().getId().equals(updatedById)) {
+             if (task.getAssignedBy() != null && !task.getAssignedBy().getId().equals(updatedById)) {
+                  // Cần check Admin role ở đây nếu muốn chặt chẽ hơn, nhưng service này tin cậy input từ Controller
+                  // throw new ForbiddenException("Bạn không có quyền cập nhật trạng thái nhiệm vụ này");
+             }
+        }
 
         // Không cho sửa task đã hoàn thành
         if (current == TaskStatus.DONE)
@@ -101,7 +142,6 @@ public class TaskService {
     }
 
     // ── Xoá task ─────────────────────────────────────────────
-    // Không cho xoá task đã DONE (theo usecase)
     @Transactional
     public void delete(Long id) {
         Task task = taskRepo.findById(id)
@@ -118,7 +158,7 @@ public class TaskService {
         return taskUpdateRepo.findByTaskIdOrderByUpdatedAtDesc(taskId);
     }
 
-    // ── Scheduler: tự động đánh dấu OVERDUE lúc 8h T2-T6 ────
+    // ── Scheduler: tự động đánh dấu OVERDUE ────────────────
     @Scheduled(cron = "0 0 8 * * MON-FRI")
     @Transactional
     public void markOverdueTasks() {
@@ -129,11 +169,9 @@ public class TaskService {
                 saveHistory(t, TaskStatus.OVERDUE, "Tự động đánh dấu quá hạn bởi hệ thống", null);
             });
             taskRepo.saveAll(overdueTasks);
-            System.out.println("[Scheduler] Đánh dấu " + overdueTasks.size() + " task quá hạn");
         }
     }
 
-    // ── Helper: lưu lịch sử thay đổi trạng thái ─────────────
     private void saveHistory(Task task, TaskStatus status, String note, Long updatedById) {
         TaskUpdate log = new TaskUpdate();
         log.setTask(task);

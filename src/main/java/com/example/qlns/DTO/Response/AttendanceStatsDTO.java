@@ -14,6 +14,15 @@ public class AttendanceStatsDTO {
         this.absentCount = absentCount;
         this.averageHoursPerDay = averageHoursPerDay;
     }
+    
+    // Constructor for simpler stats
+    public AttendanceStatsDTO(Long onTimeCount, Long lateCount, Long absentCount) {
+        this.onTimeCount = onTimeCount;
+        this.lateCount = lateCount;
+        this.absentCount = absentCount;
+        this.totalWorkHours = 0.0;
+        this.averageHoursPerDay = 0.0;
+    }
 
     // Getters
     public Double getTotalWorkHours() { return totalWorkHours; }

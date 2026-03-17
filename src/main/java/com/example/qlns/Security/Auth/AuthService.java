@@ -40,6 +40,9 @@ public class AuthService {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private com.example.qlns.Repository.EmployeeRepository empRepo;
+
     /**
      * Authenticate user and generate JWT token
      */
@@ -59,17 +62,22 @@ public class AuthService {
             // Generate JWT token
             String token = jwtService.generateToken(userDetails);
 
-            // Fetch user from database to get email
+            // Fetch user and employee data to get IDs and links
             User user = userRepository.findByUsername(request.getUsername())
                     .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-            // Return authentication response
+            Long employeeId = user.getEmployeeId();
+            Long departmentId = (employeeId != null) ? empRepo.findDepartmentIdByEmployeeId(employeeId) : null;
+
+            // Return authentication response with all required fields for frontend context
             return new AuthenticationResponse(
                     token,
                     user.getId(),
                     user.getUsername(),
                     user.getEmail(),
-                    user.getRole()
+                    user.getRole(),
+                    departmentId,
+                    employeeId
             );
 
         } catch (AuthenticationException e) {
@@ -116,13 +124,17 @@ public class AuthService {
         // Generate JWT token
         String token = jwtService.generateToken(userDetails);
 
+        Long departmentId = (savedUser.getEmployeeId() != null) ? empRepo.findDepartmentIdByEmployeeId(savedUser.getEmployeeId()) : null;
+
         // Return authentication response
         return new AuthenticationResponse(
                 token,
                 savedUser.getId(),
                 savedUser.getUsername(),
                 savedUser.getEmail(),
-                savedUser.getRole()
+                savedUser.getRole(),
+                departmentId,
+                savedUser.getEmployeeId()
         );
     }
 

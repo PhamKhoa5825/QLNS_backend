@@ -37,9 +37,7 @@ class DepartmentController {
 
     @GetMapping("/{id}/employees")
     public ResponseEntity<List<EmployeeDTO>> getEmployees(@PathVariable Long id) {
-        return ResponseEntity.ok(empService.getByDepartment(id).stream()
-                .map(e -> EmployeeDTO.from(e, empService.getRoleByEmployeeId(e.getId())))
-                .collect(Collectors.toList()));
+        return ResponseEntity.ok(empService.getByDepartment(id));
     }
 
     @PostMapping

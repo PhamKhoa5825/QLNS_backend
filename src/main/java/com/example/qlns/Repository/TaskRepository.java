@@ -35,4 +35,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findOverdueTasksToMark(@Param("now") LocalDateTime now);
 
     long countByAssignedToIdAndStatus(Long employeeId, TaskStatus status);
+
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.assignedTo.department.id = :deptId AND t.status = :status")
+    long countByDepartmentAndStatus(@Param("deptId") Long departmentId, @Param("status") TaskStatus status);
 }

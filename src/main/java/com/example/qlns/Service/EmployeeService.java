@@ -1,5 +1,6 @@
 package com.example.qlns.Service;
 
+import com.example.qlns.DTO.Response.EmployeeDTO;
 import com.example.qlns.DTO.Response.EmployeeDetailDTO;
 import com.example.qlns.DTO.Response.EmployeeSummaryDTO;
 import com.example.qlns.Entity.Employee;
@@ -14,12 +15,9 @@ import com.example.qlns.Repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
-// =============================================
-// TV1 - EmployeeService
-// =============================================
 @Service
 public class EmployeeService {
     private final EmployeeRepository empRepo;
@@ -30,17 +28,24 @@ public class EmployeeService {
         this.userRepo = userRepo;
     }
 
-    public List<Employee> getAll() {
-        return empRepo.findAll();
+    @Transactional(readOnly = true)
+    public List<EmployeeDTO> getAll() {
+        return empRepo.findAllWithDept().stream()
+                .map(emp -> EmployeeDTO.from(emp, null))
+                .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public Employee getById(Long id) {
         return empRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên id=" + id));
     }
 
-    public List<Employee> getByDepartment(Long deptId) {
-        return empRepo.findByDepartmentIdAndStatus(deptId, EmployeeStatus.ACTIVE);
+    @Transactional(readOnly = true)
+    public List<EmployeeDTO> getByDepartment(Long deptId) {
+        return empRepo.findByDepartmentIdAndStatus(deptId, EmployeeStatus.ACTIVE).stream()
+                .map(emp -> EmployeeDTO.from(emp, null))
+                .collect(Collectors.toList());
     }
 
     public List<Employee> search(String keyword) {
@@ -51,7 +56,7 @@ public class EmployeeService {
     public Employee create(Employee emp, String email, String password, Role role) {
         if (userRepo.existsByEmail(email))
             throw new DuplicateException("Email đã được sử dụng: " + email);
-        // TV2 sẽ inject PasswordEncoder và mã hóa password
+        
         User user = new User(email.split("@")[0], email, password, role);
         user = userRepo.save(user);
 
@@ -81,7 +86,6 @@ public class EmployeeService {
         Employee emp = getById(id);
         emp.setStatus(EmployeeStatus.RESIGNED);
         empRepo.save(emp);
-        // Vô hiệu hóa tài khoản
         userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
             u.setStatus(UserStatus.INACTIVE);
             userRepo.save(u);
@@ -89,14 +93,14 @@ public class EmployeeService {
     }
 
     public String getRoleByEmployeeId(Long empId) {
-        Employee emp = getById(empId);
+        Employee emp = getById(empId); 
         return userRepo.findByEmail(emp.getEmail())
                 .map(u -> u.getRole().name())
                 .orElse("EMPLOYEE");
     }
 
     /**
-     * Lấy thông tin rút gọn (Trang chủ)
+     * Lấy thông tin rút gọn (Trang chủ Employee App)
      */
     public EmployeeSummaryDTO getEmployeeSummary(Long id) {
         Employee emp = getById(id);
@@ -104,12 +108,16 @@ public class EmployeeService {
     }
 
     /**
-     * Lấy thông tin chi tiết (Trang cá nhân/Chỉnh sửa)
+     * Lấy thông tin chi tiết (Trang cá nhân/Chỉnh sửa Employee App)
      */
     public EmployeeDetailDTO getEmployeeDetail(Long id) {
         Employee emp = getById(id);
         String departmentName = (emp.getDepartment() != null) ? emp.getDepartment().getName() : "Chưa có phòng ban";
-        String role = getRoleByEmployeeId(id);
+        
+        // Inline role retrieval to avoid redundant DB call if needed, but keeping it clean
+        String role = userRepo.findByEmail(emp.getEmail())
+                .map(u -> u.getRole().name())
+                .orElse("EMPLOYEE");
 
         return new EmployeeDetailDTO(
                 emp.getId(),
