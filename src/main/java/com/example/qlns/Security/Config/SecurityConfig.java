@@ -86,7 +86,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/attendance/checkout").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers("/api/attendance/employee/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers("/api/attendance/today/department/**").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers("/api/attendance/today").hasRole("ADMIN")
+                        .requestMatchers("/api/attendance/today").hasAnyRole("EMPLOYEE", "MANAGER","ADMIN")
 
                         // 3. Requests (Đơn từ)
                         .requestMatchers(HttpMethod.GET, "/api/requests/employee/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
@@ -117,6 +117,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/departments/*/dashboard").hasAnyRole("MANAGER", "ADMIN")
 
                         // 7. Employees & Departments
+                        .requestMatchers(HttpMethod.GET, "/api/employees/{id}/summary").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/employees/{id}/detail").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/employees/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/employees/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/employees/**").hasRole("ADMIN")

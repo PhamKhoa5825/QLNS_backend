@@ -13,7 +13,6 @@ public class AuthenticationResponse {
     private String username;
     private String email;
     private Role role;
-    private String tokenType = "Bearer";
     private Long departmentId;
     private Long employeeId;
 
@@ -75,14 +74,6 @@ public class AuthenticationResponse {
 
     public void setRole(Role role) {
         this.role = role;
-    }
-
-    public String getTokenType() {
-        return tokenType;
-    }
-
-    public void setTokenType(String tokenType) {
-        this.tokenType = tokenType;
     }
 
     public Long getDepartmentId() {
