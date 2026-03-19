@@ -23,6 +23,7 @@ public class RequestService {
     @Autowired private EmployeeRepository employeeRepo;
 
     // ── Nhân viên: xem đơn của mình ──────────────────────────
+    @Transactional(readOnly = true)
     public List<RequestDTO> getMyRequests(Long employeeId) {
         return requestRepo.findByEmployeeIdOrderByCreatedAtDesc(employeeId)
                 .stream().map(RequestDTO::from).collect(Collectors.toList());
@@ -87,12 +88,14 @@ public class RequestService {
     }
 
     // ── Manager: xem tất cả đơn phòng ban ────────────────────
+    @Transactional(readOnly = true)
     public List<RequestDTO> getByDepartment(Long deptId) {
         return requestRepo.findByDepartmentId(deptId)
                 .stream().map(RequestDTO::from).collect(Collectors.toList());
     }
 
     // ── Manager: xem đơn chờ duyệt phòng ban ─────────────────
+    @Transactional(readOnly = true)
     public List<RequestDTO> getPendingByDepartment(Long deptId) {
         return requestRepo.findByDepartmentIdAndStatus(deptId, RequestStatus.PENDING)
                 .stream().map(RequestDTO::from).collect(Collectors.toList());
@@ -124,6 +127,7 @@ public class RequestService {
     }
 
     // ── Admin: xem tất cả đơn toàn công ty ───────────────────
+    @Transactional(readOnly = true)
     public List<RequestDTO> getAllRequests() {
         return requestRepo.findAllByOrderByCreatedAtDesc()
                 .stream().map(RequestDTO::from).collect(Collectors.toList());

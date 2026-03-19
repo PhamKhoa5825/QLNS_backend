@@ -51,7 +51,8 @@ public class SecurityConfig {
      */
     @Bean
     public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
@@ -109,7 +110,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/employees/**").hasRole("ADMIN") // Chỉ Admin mới tạo được NV
                         .requestMatchers("/api/departments/**").hasAnyRole("MANAGER", "ADMIN")
 
-                        // 7. System Settings
+                        // 7. System Logs (Nhật ký hệ thống) - Chỉ Admin
+                        .requestMatchers("/api/admin/logs/**").hasRole("ADMIN")
+
+                        // 8. System Settings
                         .requestMatchers("/api/settings/**").hasRole("ADMIN")
 
                         // Tất cả các request khác phải authenticated

@@ -3,9 +3,6 @@ package com.example.qlns.DTO.Response;
 import com.example.qlns.Entity.Request;
 import com.example.qlns.Enum.RequestStatus;
 
-import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 // ── Request DTO (trả về Android) ──────────────────────────────
 public class RequestDTO {
 
@@ -17,15 +14,12 @@ public class RequestDTO {
     private String description;
     private String fileUrl;
     private String fileName;
-    private RequestStatus status;
+    private String status;           // String thay vì enum → Android parse dễ
     private Long reviewedById;
     private String reviewedByName;
     private String rejectionReason;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime createdAt;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime updatedAt;
+    private String createdAt;        // String thay vì LocalDateTime → không cần JavaTimeModule
+    private String updatedAt;
 
     public static RequestDTO from(Request r) {
         RequestDTO dto = new RequestDTO();
@@ -38,14 +32,14 @@ public class RequestDTO {
         dto.description    = r.getDescription();
         dto.fileUrl        = r.getFileUrl();
         dto.fileName       = r.getFileName();
-        dto.status         = r.getStatus();
+        dto.status         = r.getStatus() != null ? r.getStatus().name() : null;
         if (r.getReviewedBy() != null) {
             dto.reviewedById   = r.getReviewedBy().getId();
             dto.reviewedByName = r.getReviewedBy().getFullName();
         }
         dto.rejectionReason = r.getRejectionReason();
-        dto.createdAt      = r.getCreatedAt();
-        dto.updatedAt      = r.getUpdatedAt();
+        dto.createdAt      = r.getCreatedAt() != null ? r.getCreatedAt().toString() : null;
+        dto.updatedAt      = r.getUpdatedAt() != null ? r.getUpdatedAt().toString() : null;
         return dto;
     }
 
@@ -58,10 +52,10 @@ public class RequestDTO {
     public String getDescription() { return description; }
     public String getFileUrl() { return fileUrl; }
     public String getFileName() { return fileName; }
-    public RequestStatus getStatus() { return status; }
+    public String getStatus() { return status; }
     public Long getReviewedById() { return reviewedById; }
     public String getReviewedByName() { return reviewedByName; }
     public String getRejectionReason() { return rejectionReason; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public String getCreatedAt() { return createdAt; }
+    public String getUpdatedAt() { return updatedAt; }
 }

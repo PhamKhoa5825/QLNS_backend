@@ -20,11 +20,15 @@ public class Notification {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "target_type", nullable = false)
-    private NotificationTarget targetType;  // COMPANY hoặc DEPARTMENT
+    private NotificationTarget targetType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
-    private Department department;  // Null nếu targetType = COMPANY
+    private Department department;
+
+    // THÊM: ID nhân viên đích khi targetType = EMPLOYEE
+    @Column(name = "target_employee_id")
+    private Long targetEmployeeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
@@ -44,8 +48,9 @@ public class Notification {
     public void setTargetType(NotificationTarget targetType) { this.targetType = targetType; }
     public Department getDepartment() { return department; }
     public void setDepartment(Department department) { this.department = department; }
+    public Long getTargetEmployeeId() { return targetEmployeeId; }
+    public void setTargetEmployeeId(Long targetEmployeeId) { this.targetEmployeeId = targetEmployeeId; }
     public Employee getCreatedBy() { return createdBy; }
     public void setCreatedBy(Employee createdBy) { this.createdBy = createdBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }
-

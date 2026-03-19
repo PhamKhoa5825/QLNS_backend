@@ -3,10 +3,12 @@ package com.example.qlns.Security.Auth;
 import com.example.qlns.DTO.Request.AuthenticationRequest;
 import com.example.qlns.DTO.Request.UserRegistrationRequest;
 import com.example.qlns.DTO.Response.AuthenticationResponse;
+import com.example.qlns.Entity.Employee;
 import com.example.qlns.Entity.User;
 import com.example.qlns.Enum.UserStatus;
 import com.example.qlns.Exception.DuplicateException;
 import com.example.qlns.Exception.ResourceNotFoundException;
+import com.example.qlns.Repository.EmployeeRepository;
 import com.example.qlns.Repository.UserRepository;
 import com.example.qlns.Security.JwtService;
 import com.example.qlns.Security.UserDetailsImpl;
@@ -20,31 +22,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Authentication Service
- * Handles user login and registration with JWT token generation
- */
 @Service
 public class AuthService {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtService jwtService;
+    @Autowired private UserRepository userRepository;
+    @Autowired private EmployeeRepository employeeRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private AuthenticationManager authenticationManager;
+    @Autowired private JwtService jwtService;
 
     /**
-     * Authenticate user and generate JWT token
+     * Login: trả về token + userId + employeeId + fullName + avatarUrl
      */
+    @Transactional(readOnly = true)
     public AuthenticationResponse login(AuthenticationRequest request) throws AuthenticationException {
         try {
-            // Authenticate user
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getUsername(),
@@ -52,23 +44,46 @@ public class AuthService {
                     )
             );
 
-            // Get authenticated user
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
-            // Generate JWT token
             String token = jwtService.generateToken(userDetails);
 
-            // Fetch user from database to get email
             User user = userRepository.findByUsername(request.getUsername())
                     .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-            // Return authentication response
+            // Tìm Employee tương ứng qua employeeId hoặc email
+            Long employeeId = null;
+            String fullName = user.getUsername();
+            String avatarUrl = null;
+
+            // Cách 1: User có field employeeId
+            if (user.getEmployeeId() != null) {
+                Employee emp = employeeRepository.findById(user.getEmployeeId()).orElse(null);
+                if (emp != null) {
+                    employeeId = emp.getId();
+                    fullName = emp.getFullName();
+                    avatarUrl = emp.getAvatarUrl();
+                }
+            }
+
+            // Cách 2: Fallback tìm theo email
+            if (employeeId == null && user.getEmail() != null) {
+                Employee emp = employeeRepository.findByEmail(user.getEmail()).orElse(null);
+                if (emp != null) {
+                    employeeId = emp.getId();
+                    fullName = emp.getFullName();
+                    avatarUrl = emp.getAvatarUrl();
+                }
+            }
+
             return new AuthenticationResponse(
                     token,
                     user.getId(),
+                    employeeId,
                     user.getUsername(),
                     user.getEmail(),
-                    user.getRole()
+                    user.getRole().name(),
+                    fullName,
+                    avatarUrl
             );
 
         } catch (AuthenticationException e) {
@@ -76,77 +91,53 @@ public class AuthService {
         }
     }
 
-    /**
-     * Register new user
-     * Validates that username and email are not already in use
-     * Hashes password using BCrypt
-     */
     @Transactional
     public AuthenticationResponse register(UserRegistrationRequest request) {
-        // Check if username already exists
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new DuplicateException("Username already taken: " + request.getUsername());
         }
-
-        // Check if email already exists
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new DuplicateException("Email already registered: " + request.getEmail());
         }
 
-        // Create new user
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword())); // Hash password
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
         user.setStatus(UserStatus.ACTIVE);
-
-        // Save user to database
         User savedUser = userRepository.save(user);
 
-        // Create UserDetailsImpl
         UserDetailsImpl userDetails = new UserDetailsImpl(
-                savedUser.getId(),
-                savedUser.getUsername(),
-                savedUser.getPassword(),
-                savedUser.getRole()
+                savedUser.getId(), savedUser.getUsername(),
+                savedUser.getPassword(), savedUser.getRole()
         );
-
-        // Generate JWT token
         String token = jwtService.generateToken(userDetails);
 
-        // Return authentication response
         return new AuthenticationResponse(
                 token,
                 savedUser.getId(),
+                null,  // chưa có employee khi register
                 savedUser.getUsername(),
                 savedUser.getEmail(),
-                savedUser.getRole()
+                savedUser.getRole().name(),
+                savedUser.getUsername(),
+                null
         );
     }
 
-    /**
-     * Validate JWT token
-     */
     public boolean validateToken(String token) {
         try {
             String username = jwtService.extractUsername(token);
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
             UserDetailsImpl userDetails = new UserDetailsImpl(
-                    user.getId(),
-                    user.getUsername(),
-                    user.getPassword(),
-                    user.getRole()
+                    user.getId(), user.getUsername(),
+                    user.getPassword(), user.getRole()
             );
-
             return jwtService.validateToken(token, userDetails);
         } catch (Exception e) {
             return false;
         }
     }
 }
-
-
-

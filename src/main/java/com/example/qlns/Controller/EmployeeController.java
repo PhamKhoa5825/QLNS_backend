@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/employees")
@@ -25,29 +24,22 @@ class EmployeeController {
 
     @GetMapping
     public ResponseEntity<List<EmployeeDTO>> getAll() {
-        return ResponseEntity.ok(empService.getAll().stream()
-                .map(e -> EmployeeDTO.from(e, empService.getRoleByEmployeeId(e.getId())))
-                .collect(Collectors.toList()));
+        return ResponseEntity.ok(empService.getAllDTO());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<EmployeeDTO> getById(@PathVariable Long id) {
-        Employee emp = empService.getById(id);
-        return ResponseEntity.ok(EmployeeDTO.from(emp, empService.getRoleByEmployeeId(id)));
+        return ResponseEntity.ok(empService.getByIdDTO(id));
     }
 
     @GetMapping("/department/{deptId}")
     public ResponseEntity<List<EmployeeDTO>> getByDepartment(@PathVariable Long deptId) {
-        return ResponseEntity.ok(empService.getByDepartment(deptId).stream()
-                .map(e -> EmployeeDTO.from(e, empService.getRoleByEmployeeId(e.getId())))
-                .collect(Collectors.toList()));
+        return ResponseEntity.ok(empService.getByDepartmentDTO(deptId));
     }
 
     @GetMapping("/search")
     public ResponseEntity<List<EmployeeDTO>> search(@RequestParam String keyword) {
-        return ResponseEntity.ok(empService.search(keyword).stream()
-                .map(e -> EmployeeDTO.from(e, empService.getRoleByEmployeeId(e.getId())))
-                .collect(Collectors.toList()));
+        return ResponseEntity.ok(empService.searchDTO(keyword));
     }
 
     @PostMapping
@@ -78,14 +70,12 @@ class EmployeeController {
         return ResponseEntity.ok(EmployeeDTO.from(updated, empService.getRoleByEmployeeId(id)));
     }
 
-    /** Cho nghỉ việc: PUT /api/employees/{id}/resign */
     @PutMapping("/{id}/resign")
     public ResponseEntity<Void> resign(@PathVariable Long id) {
         empService.resign(id);
         return ResponseEntity.noContent().build();
     }
 
-    /** Khôi phục nhân viên: PUT /api/employees/{id}/reactivate */
     @PutMapping("/{id}/reactivate")
     public ResponseEntity<Void> reactivate(@PathVariable Long id) {
         empService.reactivate(id);

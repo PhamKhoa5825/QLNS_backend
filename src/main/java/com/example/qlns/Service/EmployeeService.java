@@ -1,5 +1,6 @@
 package com.example.qlns.Service;
 
+import com.example.qlns.DTO.Response.EmployeeDTO;
 import com.example.qlns.Entity.Employee;
 import com.example.qlns.Entity.User;
 import com.example.qlns.Enum.EmployeeStatus;
@@ -12,8 +13,8 @@ import com.example.qlns.Repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EmployeeService {
@@ -25,22 +26,76 @@ public class EmployeeService {
         this.userRepo = userRepo;
     }
 
+    // ── ĐỌC (có @Transactional để LAZY không crash) ──────────
+
+    @Transactional(readOnly = true)
     public List<Employee> getAll() {
         return empRepo.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Employee getById(Long id) {
         return empRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên id=" + id));
     }
 
+    @Transactional(readOnly = true)
     public List<Employee> getByDepartment(Long deptId) {
         return empRepo.findByDepartmentIdAndStatus(deptId, EmployeeStatus.ACTIVE);
     }
 
+    @Transactional(readOnly = true)
     public List<Employee> search(String keyword) {
         return empRepo.search(keyword);
     }
+
+    @Transactional(readOnly = true)
+    public String getRoleByEmployeeId(Long empId) {
+        Employee emp = getById(empId);
+        return userRepo.findByEmail(emp.getEmail())
+                .map(u -> u.getRole().name())
+                .orElse("EMPLOYEE");
+    }
+
+    /**
+     * Trả về DTO list — gọi EmployeeDTO.from() BÊN TRONG transaction
+     * → emp.getDepartment() (LAZY) không crash.
+     */
+    @Transactional(readOnly = true)
+    public List<EmployeeDTO> getAllDTO() {
+        return empRepo.findAll().stream()
+                .map(e -> EmployeeDTO.from(e, getRoleForEmployee(e)))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public EmployeeDTO getByIdDTO(Long id) {
+        Employee emp = getById(id);
+        return EmployeeDTO.from(emp, getRoleForEmployee(emp));
+    }
+
+    @Transactional(readOnly = true)
+    public List<EmployeeDTO> getByDepartmentDTO(Long deptId) {
+        return getByDepartment(deptId).stream()
+                .map(e -> EmployeeDTO.from(e, getRoleForEmployee(e)))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<EmployeeDTO> searchDTO(String keyword) {
+        return search(keyword).stream()
+                .map(e -> EmployeeDTO.from(e, getRoleForEmployee(e)))
+                .collect(Collectors.toList());
+    }
+
+    /** Helper: lấy role từ User table cho 1 employee */
+    private String getRoleForEmployee(Employee emp) {
+        return userRepo.findByEmail(emp.getEmail())
+                .map(u -> u.getRole().name())
+                .orElse("EMPLOYEE");
+    }
+
+    // ── GHI ───────────────────────────────────────────────────
 
     @Transactional
     public Employee create(Employee emp, String email, String password, Role role) {
@@ -71,37 +126,25 @@ public class EmployeeService {
         return empRepo.save(emp);
     }
 
-    /** Cho nghỉ việc: Employee → RESIGNED, User → INACTIVE */
     @Transactional
     public void resign(Long id) {
         Employee emp = getById(id);
         emp.setStatus(EmployeeStatus.RESIGNED);
         empRepo.save(emp);
-
         userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
             u.setStatus(UserStatus.INACTIVE);
             userRepo.save(u);
         });
     }
 
-    /** Khôi phục nhân viên: Employee → ACTIVE, User → ACTIVE */
     @Transactional
     public void reactivate(Long id) {
         Employee emp = getById(id);
         emp.setStatus(EmployeeStatus.ACTIVE);
         empRepo.save(emp);
-
-        // Kích hoạt lại tài khoản đăng nhập
         userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
             u.setStatus(UserStatus.ACTIVE);
             userRepo.save(u);
         });
-    }
-
-    public String getRoleByEmployeeId(Long empId) {
-        Employee emp = getById(empId);
-        return userRepo.findByEmail(emp.getEmail())
-                .map(u -> u.getRole().name())
-                .orElse("EMPLOYEE");
     }
 }
