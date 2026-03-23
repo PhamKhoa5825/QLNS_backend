@@ -23,4 +23,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByRole(Role role);
 
     List<User> findByStatus(UserStatus status);
+
+    // [Chat] Danh bạ thông minh - Tìm user theo employeeId
+    Optional<User> findByEmployeeId(Long employeeId);
 }

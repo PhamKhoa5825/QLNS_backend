@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 @Table(name = "chat_rooms")
 public class ChatRoom {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
@@ -20,19 +21,59 @@ public class ChatRoom {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
-    private Department department;  // Chỉ có khi type = DEPARTMENT
+    private Department department; // Chỉ có khi type = DEPARTMENT
+
+
+    // [Chat] Người tạo phòng chat
+    @Column(name = "created_by")
+    private Long createdBy;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    public ChatRoom() {}
+    public ChatRoom() {
+    }
 
-    public Long getId() { return id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public ChatRoomType getType() { return type; }
-    public void setType(ChatRoomType type) { this.type = type; }
-    public Department getDepartment() { return department; }
-    public void setDepartment(Department department) { this.department = department; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    // Getters & Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public ChatRoomType getType() {
+        return type;
+    }
+
+    public void setType(ChatRoomType type) {
+        this.type = type;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 }

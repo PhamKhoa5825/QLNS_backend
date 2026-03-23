@@ -7,16 +7,23 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-// =============================================
-// TV4 - MessageRepository
-// =============================================
+// [Chat] Repository quản lý tin nhắn - mở rộng thêm truy vấn ghim, đếm chưa đọc
 public interface MessageRepository extends JpaRepository<Message, Long> {
+
+    // [Chat] Lấy tin nhắn theo phòng, sắp xếp theo thời gian
     List<Message> findByRoomIdOrderByCreatedAtAsc(Long roomId);
 
-    // Polling: chỉ lấy tin nhắn mới hơn lastId
+    // [Chat] Polling - lấy tin nhắn mới hơn lastId
     @Query("SELECT m FROM Message m WHERE m.room.id = :roomId AND m.id > :lastId ORDER BY m.createdAt ASC")
     List<Message> findNewMessages(@Param("roomId") Long roomId,
                                   @Param("lastId") Long lastMessageId);
 
+    // [Chat] Lấy tin nhắn mới hơn ID nhất định
     List<Message> findByRoomIdAndIdGreaterThan(Long roomId, Long lastId);
+
+    // [Chat] Ghim - Lấy danh sách tin nhắn đang ghim trong phòng
+    List<Message> findByRoomIdAndIsPinnedTrueOrderByPinnedAtDesc(Long roomId);
+
+    // [Chat] Đếm tin nhắn chưa đọc (id > lastReadMessageId)
+    long countByRoomIdAndIdGreaterThan(Long roomId, Long lastReadMessageId);
 }

@@ -46,6 +46,10 @@ public class Employee {
     @JoinColumn(name = "department_id")
     private Department department;
 
+    // [Chat] Danh bạ thông minh - Kỹ năng nhân viên (comma-separated VD: "Java,Spring,React")
+    @Column(length = 500)
+    private String skills;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -77,6 +81,11 @@ public class Employee {
     public void setStatus(EmployeeStatus status) { this.status = status; }
     public Department getDepartment() { return department; }
     public void setDepartment(Department department) { this.department = department; }
+
+    // [Chat] Danh bạ thông minh - kỹ năng
+    public String getSkills() { return skills; }
+    public void setSkills(String skills) { this.skills = skills; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

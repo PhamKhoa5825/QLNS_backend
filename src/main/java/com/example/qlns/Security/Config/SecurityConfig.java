@@ -77,6 +77,9 @@ public class SecurityConfig {
                         // 1. Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll() // [Chat] Cho phép kết nối WebSocket
+                        .requestMatchers("/uploads/**").permitAll() // [Chat] Truy cập file media
+
 
                         // 2. Attendance (Chấm công)
                         // Khớp với AttendanceController: /api/attendance/checkin (POST) và /checkout (PUT)
