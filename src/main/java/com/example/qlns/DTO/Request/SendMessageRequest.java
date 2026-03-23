@@ -1,19 +1,16 @@
 package com.example.qlns.DTO.Request;
 
-// [Chat] Request gửi tin nhắn - mở rộng thêm reply, voice, metadata
+// [Chat] Request gửi tin nhắn
 public class SendMessageRequest {
     private Long roomId;
     private Long senderId;
     private String message;
-    private String messageType;     // TEXT/IMAGE/FILE/VOICE/TASK_CARD/POLL/BOT/SYSTEM
+    private String messageType; // TEXT / IMAGE / FILE / POLL
 
     // [Chat] Reply - ID tin nhắn đang trả lời (null = không reply)
     private Long replyToId;
 
-    // [Chat] Voice - Thời lượng tin nhắn thoại (giây)
-    private Integer voiceDuration;
-
-    // [Chat] Metadata bổ sung dạng JSON (task card, poll, bot)
+    // [Chat] Metadata bổ sung (poll data)
     private String metadata;
 
     public Long getRoomId() { return roomId; }
@@ -30,9 +27,6 @@ public class SendMessageRequest {
 
     public Long getReplyToId() { return replyToId; }
     public void setReplyToId(Long replyToId) { this.replyToId = replyToId; }
-
-    public Integer getVoiceDuration() { return voiceDuration; }
-    public void setVoiceDuration(Integer voiceDuration) { this.voiceDuration = voiceDuration; }
 
     public String getMetadata() { return metadata; }
     public void setMetadata(String metadata) { this.metadata = metadata; }

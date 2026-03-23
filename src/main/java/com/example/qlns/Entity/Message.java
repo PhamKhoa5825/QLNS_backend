@@ -37,9 +37,6 @@ public class Message {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @Column(name = "is_read")
-    private Boolean isRead = false;
-
     // [Chat] Đa phương tiện - URL file đã upload (ảnh, file, voice)
     @Column(name = "file_url", length = 500)
     private String fileUrl;
@@ -56,14 +53,6 @@ public class Message {
     @Column(name = "reply_to_id")
     private Long replyToId;
 
-    // [Chat] Chỉnh sửa - Tin nhắn đã bị sửa hay chưa
-    @Column(name = "is_edited")
-    private Boolean isEdited = false;
-
-    // [Chat] Chỉnh sửa - Thời gian sửa lần cuối
-    @Column(name = "edited_at")
-    private LocalDateTime editedAt;
-
     // [Chat] Thu hồi - Tin nhắn đã bị thu hồi hay chưa
     @Column(name = "is_recalled")
     private Boolean isRecalled = false;
@@ -72,23 +61,7 @@ public class Message {
     @Column(name = "recalled_at")
     private LocalDateTime recalledAt;
 
-    // [Chat] Ghim - Tin nhắn đang ghim hay không
-    @Column(name = "is_pinned")
-    private Boolean isPinned = false;
-
-    // [Chat] Ghim - Người ghim tin nhắn
-    @Column(name = "pinned_by")
-    private Long pinnedBy;
-
-    // [Chat] Ghim - Thời gian ghim
-    @Column(name = "pinned_at")
-    private LocalDateTime pinnedAt;
-
-    // [Chat] Voice - Thời lượng tin nhắn thoại (giây)
-    @Column(name = "voice_duration")
-    private Integer voiceDuration;
-
-    // [Chat] Metadata bổ sung dạng JSON (task card data, poll data, bot data)
+    // [Chat] Metadata bổ sung dạng JSON (poll data)
     @Column(columnDefinition = "TEXT")
     private String metadata;
 
@@ -97,59 +70,107 @@ public class Message {
 
     // ── Getters & Setters ──────────────────────────────────────
 
-    public Long getId() { return id; }
+    public Long getId() {
+        return id;
+    }
 
-    public ChatRoom getRoom() { return room; }
-    public void setRoom(ChatRoom room) { this.room = room; }
+    public ChatRoom getRoom() {
+        return room;
+    }
 
-    public User getSender() { return sender; }
-    public void setSender(User sender) { this.sender = sender; }
+    public void setRoom(ChatRoom room) {
+        this.room = room;
+    }
 
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
+    public User getSender() {
+        return sender;
+    }
 
-    public MessageType getMessageType() { return messageType; }
-    public void setMessageType(MessageType messageType) { this.messageType = messageType; }
+    public void setSender(User sender) {
+        this.sender = sender;
+    }
 
-    public MessageStatus getStatus() { return status; }
-    public void setStatus(MessageStatus status) { this.status = status; }
+    public String getMessage() {
+        return message;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
-    public Boolean getIsRead() { return isRead; }
-    public void setIsRead(Boolean isRead) { this.isRead = isRead; }
+    public MessageType getMessageType() {
+        return messageType;
+    }
 
-    public String getFileUrl() { return fileUrl; }
-    public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
+    public void setMessageType(MessageType messageType) {
+        this.messageType = messageType;
+    }
 
-    public String getFileName() { return fileName; }
-    public void setFileName(String fileName) { this.fileName = fileName; }
+    public MessageStatus getStatus() {
+        return status;
+    }
 
-    public Long getFileSize() { return fileSize; }
-    public void setFileSize(Long fileSize) { this.fileSize = fileSize; }
+    public void setStatus(MessageStatus status) {
+        this.status = status;
+    }
 
-    public Long getReplyToId() { return replyToId; }
-    public void setReplyToId(Long replyToId) { this.replyToId = replyToId; }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
+    public String getFileUrl() {
+        return fileUrl;
+    }
 
-    public Boolean getIsRecalled() { return isRecalled; }
-    public void setIsRecalled(Boolean isRecalled) { this.isRecalled = isRecalled; }
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
+    }
 
-    public LocalDateTime getRecalledAt() { return recalledAt; }
-    public void setRecalledAt(LocalDateTime recalledAt) { this.recalledAt = recalledAt; }
+    public String getFileName() {
+        return fileName;
+    }
 
-    public Boolean getIsPinned() { return isPinned; }
-    public void setIsPinned(Boolean isPinned) { this.isPinned = isPinned; }
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
 
-    public Long getPinnedBy() { return pinnedBy; }
-    public void setPinnedBy(Long pinnedBy) { this.pinnedBy = pinnedBy; }
+    public Long getFileSize() {
+        return fileSize;
+    }
 
-    public LocalDateTime getPinnedAt() { return pinnedAt; }
-    public void setPinnedAt(LocalDateTime pinnedAt) { this.pinnedAt = pinnedAt; }
+    public void setFileSize(Long fileSize) {
+        this.fileSize = fileSize;
+    }
 
-    public Integer getVoiceDuration() { return voiceDuration; }
-    public void setVoiceDuration(Integer voiceDuration) { this.voiceDuration = voiceDuration; }
+    public Long getReplyToId() {
+        return replyToId;
+    }
 
-    public String getMetadata() { return metadata; }
-    public void setMetadata(String metadata) { this.metadata = metadata; }
+    public void setReplyToId(Long replyToId) {
+        this.replyToId = replyToId;
+    }
+
+    public Boolean getIsRecalled() {
+        return isRecalled;
+    }
+
+    public void setIsRecalled(Boolean isRecalled) {
+        this.isRecalled = isRecalled;
+    }
+
+    public LocalDateTime getRecalledAt() {
+        return recalledAt;
+    }
+
+    public void setRecalledAt(LocalDateTime recalledAt) {
+        this.recalledAt = recalledAt;
+    }
+
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
+    }
 }

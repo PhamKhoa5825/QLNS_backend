@@ -4,7 +4,7 @@ import com.example.qlns.Entity.Message;
 
 import java.util.List;
 
-// [Chat] DTO tin nhắn - mở rộng với file, edit, recall, pin, reply, voice, reactions, seen
+// [Chat] DTO tin nhắn - bao gồm file, thu hồi, reply, voice, reactions, seen
 public class MessageDTO {
     private Long id;
     private Long roomId;
@@ -28,15 +28,8 @@ public class MessageDTO {
     // [Chat] Thu hồi
     private Boolean isRecalled;
 
-    // [Chat] Ghim
-    private Boolean isPinned;
-    private Long pinnedBy;
-    private String pinnedAt;
 
-    // [Chat] Voice
-    private Integer voiceDuration;
-
-    // [Chat] Metadata bổ sung (task card, poll, bot data)
+    // [Chat] Metadata bổ sung (poll data)
     private String metadata;
 
     // [Chat] Reactions tổng hợp theo emoji
@@ -58,10 +51,6 @@ public class MessageDTO {
         dto.fileSize = m.getFileSize();
         dto.replyToId = m.getReplyToId();
         dto.isRecalled = m.getIsRecalled();
-        dto.isPinned = m.getIsPinned();
-        dto.pinnedBy = m.getPinnedBy();
-        dto.pinnedAt = m.getPinnedAt() != null ? m.getPinnedAt().toString() : null;
-        dto.voiceDuration = m.getVoiceDuration();
         dto.metadata = m.getMetadata();
         if (m.getRoom() != null) dto.roomId = m.getRoom().getId();
         if (m.getSender() != null) {
@@ -96,10 +85,6 @@ public class MessageDTO {
     public void setReplyToMessage(MessageDTO replyToMessage) { this.replyToMessage = replyToMessage; }
 
     public Boolean getIsRecalled() { return isRecalled; }
-    public Boolean getIsPinned() { return isPinned; }
-    public Long getPinnedBy() { return pinnedBy; }
-    public String getPinnedAt() { return pinnedAt; }
-    public Integer getVoiceDuration() { return voiceDuration; }
     public String getMetadata() { return metadata; }
 
     public List<ReactionDTO> getReactions() { return reactions; }

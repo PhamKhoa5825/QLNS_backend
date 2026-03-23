@@ -27,9 +27,6 @@ public class ChatRoomMember {
     @Column(name = "last_read_message_id")
     private Long lastReadMessageId;
 
-    // [Chat] Tắt thông báo cho phòng chat này
-    @Column(name = "is_notification_muted")
-    private Boolean isNotificationMuted = false;
 
     @CreationTimestamp
     private LocalDateTime joinedAt;
@@ -52,8 +49,6 @@ public class ChatRoomMember {
     public Long getLastReadMessageId() { return lastReadMessageId; }
     public void setLastReadMessageId(Long lastReadMessageId) { this.lastReadMessageId = lastReadMessageId; }
 
-    public Boolean getIsNotificationMuted() { return isNotificationMuted; }
-    public void setIsNotificationMuted(Boolean isNotificationMuted) { this.isNotificationMuted = isNotificationMuted; }
 
     public LocalDateTime getJoinedAt() { return joinedAt; }
 }

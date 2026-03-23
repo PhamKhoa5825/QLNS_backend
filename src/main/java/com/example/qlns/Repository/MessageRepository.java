@@ -7,7 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-// [Chat] Repository quản lý tin nhắn - mở rộng thêm truy vấn ghim, đếm chưa đọc
+// [Chat] Repository quản lý tin nhắn
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
     // [Chat] Lấy tin nhắn theo phòng, sắp xếp theo thời gian
@@ -20,9 +20,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     // [Chat] Lấy tin nhắn mới hơn ID nhất định
     List<Message> findByRoomIdAndIdGreaterThan(Long roomId, Long lastId);
-
-    // [Chat] Ghim - Lấy danh sách tin nhắn đang ghim trong phòng
-    List<Message> findByRoomIdAndIsPinnedTrueOrderByPinnedAtDesc(Long roomId);
 
     // [Chat] Đếm tin nhắn chưa đọc (id > lastReadMessageId)
     long countByRoomIdAndIdGreaterThan(Long roomId, Long lastReadMessageId);

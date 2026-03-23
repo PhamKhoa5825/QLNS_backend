@@ -59,8 +59,7 @@ public class ChatController {
                 ? MessageType.valueOf(req.getMessageType()) : MessageType.TEXT;
         Message msg = chatService.sendMessageAdvanced(
                 req.getRoomId(), req.getSenderId(), req.getMessage(), type,
-                req.getReplyToId(), req.getVoiceDuration(), req.getMetadata(),
-                null, null, null
+                req.getReplyToId(), req.getMetadata(), null, null, null
         );
         return ResponseEntity.ok(MessageDTO.from(msg));
     }
@@ -73,7 +72,7 @@ public class ChatController {
     }
 
     // ══════════════════════════════════════════════════════════════
-    // [Chat] ĐA PHƯƠNG TIỆN - Upload file (ảnh, PDF, Excel, voice)
+    // [Chat] ĐA PHƯƠNG TIỆN - Upload file (ảnh, PDF, Excel)
     // ══════════════════════════════════════════════════════════════
 
     // [Chat] Upload file và gửi tin nhắn media vào phòng chat
@@ -88,7 +87,7 @@ public class ChatController {
         MessageType type = MessageType.valueOf(messageType);
         Message msg = chatService.sendMessageAdvanced(
                 roomId, senderId, fileName != null ? fileName : "File",
-                type, null, null, null, fileUrl, fileName, fileSize
+                type, null, null, fileUrl, fileName, fileSize
         );
         return ResponseEntity.ok(MessageDTO.from(msg));
     }

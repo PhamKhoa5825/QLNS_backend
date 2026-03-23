@@ -162,11 +162,11 @@ public class ChatService {
         return saved;
     }
 
-    // [Chat] Gửi tin nhắn nâng cao - Hỗ trợ reply, voice, metadata, file
+    // [Chat] Gửi tin nhắn nâng cao - Hỗ trợ reply, metadata, file
     @Transactional
     public Message sendMessageAdvanced(Long roomId, Long senderId, String content,
             MessageType type, Long replyToId,
-            Integer voiceDuration, String metadata,
+            String metadata,
             String fileUrl, String fileName, Long fileSize) {
         ChatRoom room = roomRepo.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng chat"));
@@ -183,7 +183,6 @@ public class ChatService {
         msg.setMessageType(type);
         msg.setStatus(MessageStatus.SENT);
         msg.setReplyToId(replyToId);
-        msg.setVoiceDuration(voiceDuration);
         msg.setMetadata(metadata);
         msg.setFileUrl(fileUrl);
         msg.setFileName(fileName);

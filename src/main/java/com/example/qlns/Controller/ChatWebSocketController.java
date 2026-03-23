@@ -36,7 +36,7 @@ public class ChatWebSocketController {
 
         chatService.sendMessageAdvanced(
                 request.getRoomId(), senderId, request.getMessage(), type,
-                request.getReplyToId(), request.getVoiceDuration(),
+                request.getReplyToId(),
                 request.getMetadata(), null, null, null);
     }
 
