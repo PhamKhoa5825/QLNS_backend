@@ -25,8 +25,9 @@ public class ChatRoom {
 
 
     // [Chat] Người tạo phòng chat
-    @Column(name = "created_by")
-    private Long createdBy;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -65,11 +66,11 @@ public class ChatRoom {
     }
 
 
-    public Long getCreatedBy() {
+    public User getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(Long createdBy) {
+    public void setCreatedBy(User createdBy) {
         this.createdBy = createdBy;
     }
 

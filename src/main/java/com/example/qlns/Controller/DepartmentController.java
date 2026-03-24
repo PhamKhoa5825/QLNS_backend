@@ -17,9 +17,12 @@ import java.util.stream.Collectors;
 class DepartmentController {
     private final DepartmentService deptService;
     private final EmployeeService empService;
+    private final ChatService chatService;
 
-    DepartmentController(DepartmentService deptService, EmployeeService empService) {
-        this.deptService = deptService; this.empService = empService;
+    DepartmentController(DepartmentService deptService, EmployeeService empService, ChatService chatService) {
+        this.deptService = deptService;
+        this.empService = empService;
+        this.chatService = chatService;
     }
 
     @GetMapping
@@ -42,9 +45,11 @@ class DepartmentController {
                 .collect(Collectors.toList()));
     }
 
+    // [Chat] Tạo phòng ban → tự động khởi tạo phòng chat mặc định
     @PostMapping
     public ResponseEntity<DepartmentDTO> create(@RequestBody Department dept) {
         Department saved = deptService.create(dept);
+        chatService.initDepartmentRoom(saved);
         return ResponseEntity.ok(DepartmentDTO.from(saved, 0));
     }
 
@@ -54,9 +59,11 @@ class DepartmentController {
         return ResponseEntity.ok(DepartmentDTO.from(updated, deptService.countEmployees(id)));
     }
 
+    // [Chat] Đổi manager → đồng bộ lại ADMIN trong phòng chat
     @PutMapping("/{deptId}/manager/{empId}")
     public ResponseEntity<DepartmentDTO> setManager(@PathVariable Long deptId, @PathVariable Long empId) {
         Department updated = deptService.setManager(deptId, empId);
+        chatService.initDepartmentRoom(updated);
         return ResponseEntity.ok(DepartmentDTO.from(updated, deptService.countEmployees(deptId)));
     }
 
@@ -66,4 +73,3 @@ class DepartmentController {
         return ResponseEntity.noContent().build();
     }
 }
-

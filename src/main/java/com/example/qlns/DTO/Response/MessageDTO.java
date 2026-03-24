@@ -10,10 +10,8 @@ public class MessageDTO {
     private Long roomId;
     private Long senderId;
     private String senderName;
-    private String senderAvatar;
     private String message;
     private String messageType;
-    private String status;
     private String createdAt;
 
     // [Chat] Đa phương tiện
@@ -44,7 +42,6 @@ public class MessageDTO {
         dto.id = m.getId();
         dto.message = m.getMessage();
         dto.messageType = m.getMessageType().name();
-        dto.status = m.getStatus() != null ? m.getStatus().name() : null;
         dto.createdAt = m.getCreatedAt() != null ? m.getCreatedAt().toString() : null;
         dto.fileUrl = m.getFileUrl();
         dto.fileName = m.getFileName();
@@ -69,12 +66,8 @@ public class MessageDTO {
     public String getSenderName() { return senderName; }
     public void setSenderName(String senderName) { this.senderName = senderName; }
 
-    public String getSenderAvatar() { return senderAvatar; }
-    public void setSenderAvatar(String senderAvatar) { this.senderAvatar = senderAvatar; }
-
     public String getMessage() { return message; }
     public String getMessageType() { return messageType; }
-    public String getStatus() { return status; }
     public String getCreatedAt() { return createdAt; }
     public String getFileUrl() { return fileUrl; }
     public String getFileName() { return fileName; }

@@ -1,6 +1,5 @@
 package com.example.qlns.Entity;
 
-import com.example.qlns.Enum.MessageStatus;
 import com.example.qlns.Enum.MessageType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -29,10 +28,6 @@ public class Message {
     @Column(name = "message_type")
     private MessageType messageType = MessageType.TEXT;
 
-    // [Chat] Trạng thái gửi/nhận/đọc của tin nhắn
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private MessageStatus status = MessageStatus.SENT;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -57,9 +52,6 @@ public class Message {
     @Column(name = "is_recalled")
     private Boolean isRecalled = false;
 
-    // [Chat] Thu hồi - Thời gian thu hồi
-    @Column(name = "recalled_at")
-    private LocalDateTime recalledAt;
 
     // [Chat] Metadata bổ sung dạng JSON (poll data)
     @Column(columnDefinition = "TEXT")
@@ -106,13 +98,6 @@ public class Message {
         this.messageType = messageType;
     }
 
-    public MessageStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(MessageStatus status) {
-        this.status = status;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
@@ -158,13 +143,6 @@ public class Message {
         this.isRecalled = isRecalled;
     }
 
-    public LocalDateTime getRecalledAt() {
-        return recalledAt;
-    }
-
-    public void setRecalledAt(LocalDateTime recalledAt) {
-        this.recalledAt = recalledAt;
-    }
 
     public String getMetadata() {
         return metadata;

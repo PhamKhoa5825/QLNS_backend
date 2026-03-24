@@ -23,7 +23,4 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
 
     // [Chat] Đồng bộ nhân sự - Xóa member khỏi phòng khi nghỉ việc
     void deleteByRoomIdAndUserId(Long roomId, Long userId);
-
-    // [Chat] Đồng bộ nhân sự - Xóa tất cả membership của user (khi nghỉ việc)
-    void deleteByUserId(Long userId);
 }

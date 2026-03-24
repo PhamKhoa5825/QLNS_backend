@@ -9,11 +9,12 @@ import com.example.qlns.DTO.Response.ReadReceiptDTO;
 import com.example.qlns.Entity.*;
 import com.example.qlns.Enum.ChatEventType;
 import com.example.qlns.Enum.ChatRoomType;
-import com.example.qlns.Enum.MessageStatus;
 import com.example.qlns.Enum.MessageType;
 import com.example.qlns.Exception.ForbiddenException;
 import com.example.qlns.Exception.ResourceNotFoundException;
 import com.example.qlns.Repository.*;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ public class ChatService {
     private final MessageReadReceiptRepository readReceiptRepo;
     private final MessageReactionRepository reactionRepo;
     private final EmployeeRepository employeeRepo;
+    private final DepartmentRepository departmentRepo;
     private final SimpMessagingTemplate messagingTemplate;
 
     // [Chat] Constructor injection - tuân thủ Dependency Inversion
@@ -44,6 +46,7 @@ public class ChatService {
             MessageReadReceiptRepository readReceiptRepo,
             MessageReactionRepository reactionRepo,
             EmployeeRepository employeeRepo,
+            DepartmentRepository departmentRepo,
             SimpMessagingTemplate messagingTemplate) {
         this.roomRepo = roomRepo;
         this.memberRepo = memberRepo;
@@ -52,22 +55,29 @@ public class ChatService {
         this.readReceiptRepo = readReceiptRepo;
         this.reactionRepo = reactionRepo;
         this.employeeRepo = employeeRepo;
+        this.departmentRepo = departmentRepo;
         this.messagingTemplate = messagingTemplate;
+    }
+
+    // [Chat] Tự động tạo phòng chat cho các phòng ban chưa có nhóm khi app khởi
+    // động
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
+    public void syncDepartmentRoomsOnStartup() {
+        departmentRepo.findAll().forEach(dept -> {
+            if (roomRepo.findByDepartmentId(dept.getId()).isEmpty()) {
+                initDepartmentRoom(dept);
+            }
+        });
     }
 
     // ══════════════════════════════════════════════════════════════
     // [Chat] PHÒNG CHAT - Quản lý room
     // ══════════════════════════════════════════════════════════════
 
-    // [Chat] Lấy danh sách phòng chat của user
-    public List<ChatRoom> getRoomsForUser(Long userId) {
-        return memberRepo.findByUserId(userId).stream()
-                .map(ChatRoomMember::getRoom)
-                .toList();
-    }
-
     // [Chat] Lấy danh sách phòng chat kèm metadata (unreadCount, lastMessage) cho
     // Frontend
+    //
     public List<ChatRoomDTO> getRoomsWithMetadata(Long userId) {
         List<ChatRoomMember> memberships = memberRepo.findByUserId(userId);
 
@@ -100,8 +110,11 @@ public class ChatService {
     @Transactional
     public ChatRoom getOrCreatePrivateRoom(Long userId1, Long userId2) {
         return roomRepo.findPrivateRoom(userId1, userId2).orElseGet(() -> {
+            User creator = userRepo.findById(userId1)
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
             ChatRoom room = new ChatRoom();
             room.setType(ChatRoomType.PRIVATE);
+            room.setCreatedBy(creator);
             ChatRoom saved = roomRepo.save(room);
             addMember(saved.getId(), userId1);
             addMember(saved.getId(), userId2);
@@ -109,58 +122,198 @@ public class ChatService {
         });
     }
 
-    // [Chat] Tạo phòng chat phòng ban (dùng cho HR Sync tự động)
+    // [Chat] Khởi tạo phòng chat mặc định cho phòng ban
+    // - Manager của phòng ban → ADMIN
+    // - Toàn bộ nhân viên còn lại → MEMBER
+    // - Nếu phòng đã tồn tại → cập nhật thành viên
     @Transactional
-    public ChatRoom createDepartmentRoom(Long departmentId, String name) {
-        ChatRoom room = new ChatRoom();
-        room.setName(name);
-        room.setType(ChatRoomType.DEPARTMENT);
-        return roomRepo.save(room);
+    public ChatRoom initDepartmentRoom(Department department) {
+        // [Chat] Tìm hoặc tạo mới phòng DEPARTMENT theo departmentId
+        ChatRoom room = roomRepo.findByDepartmentId(department.getId()).orElseGet(() -> {
+            ChatRoom newRoom = new ChatRoom();
+            newRoom.setName(department.getName());
+            newRoom.setType(ChatRoomType.DEPARTMENT);
+            newRoom.setDepartment(department);
+            return roomRepo.save(newRoom);
+        });
+
+        // [Chat] Xác định manager của phòng
+        Employee manager = department.getManager();
+
+        // [Chat] Thêm manager làm ADMIN (nếu có User tài khoản)
+        if (manager != null) {
+            userRepo.findByEmployeeId(manager.getId()).ifPresent(managerUser -> {
+                // Nếu chưa có createdBy → gán creator là manager
+                if (room.getCreatedBy() == null) {
+                    room.setCreatedBy(managerUser);
+                    roomRepo.save(room);
+                }
+                addMemberWithRole(room.getId(), managerUser.getId(), "ADMIN");
+            });
+        }
+
+        // [Chat] Thêm tất cả nhân viên ACTIVE trong phòng làm MEMBER
+        List<Employee> employees = employeeRepo.findByDepartmentIdAndStatus(
+                department.getId(), com.example.qlns.Enum.EmployeeStatus.ACTIVE);
+        for (Employee emp : employees) {
+            // Bỏ qua manager (đã thêm ADMIN ở trên)
+            if (manager != null && emp.getId().equals(manager.getId()))
+                continue;
+            userRepo.findByEmployeeId(emp.getId())
+                    .ifPresent(user -> addMemberWithRole(room.getId(), user.getId(), "MEMBER"));
+        }
+
+        // [Chat] Gửi tin hệ thống nếu phòng mới được tạo
+        if (room.getCreatedBy() != null && messageRepo.findByRoomIdOrderByCreatedAtAsc(room.getId()).isEmpty()) {
+            sendSystemMessage(room.getId(), "Phòng chat \"" + department.getName() + "\" đã được tạo");
+        }
+
+        return room;
     }
 
-    // [Chat] Thêm thành viên vào phòng chat
-    public void addMember(Long roomId, Long userId) {
+    @Transactional
+    public ChatRoom createGroupRoom(String name, List<Long> memberUserIds, Long creatorUserId) {
+        User creator = userRepo.findById(creatorUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+
+        ChatRoom room = new ChatRoom();
+        room.setName(name);
+        room.setType(ChatRoomType.GROUP);
+        room.setCreatedBy(creator);
+        ChatRoom saved = roomRepo.save(room);
+
+        // [Chat] Thêm creator với role ADMIN
+        addMemberWithRole(saved.getId(), creatorUserId, "ADMIN");
+
+        // [Chat] Thêm các thành viên ban đầu
+        if (memberUserIds != null) {
+            for (Long uid : memberUserIds) {
+                if (!uid.equals(creatorUserId)) {
+                    addMemberWithRole(saved.getId(), uid, "MEMBER");
+                }
+            }
+        }
+
+        // [Chat] Gửi tin nhắn hệ thống thông báo tạo nhóm
+        String sysMsg = creator.getUsername() + " đã tạo nhóm \"" + name + "\"";
+        sendSystemMessage(saved.getId(), sysMsg);
+        return saved;
+    }
+
+    // [Chat] Đổi tên phòng chat nhóm
+    @Transactional
+    public ChatRoom updateRoomName(Long roomId, String newName, Long updatedByUserId) {
+        ChatRoom room = roomRepo.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng chat"));
+        User updater = userRepo.findById(updatedByUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+        if (!memberRepo.existsByRoomIdAndUserId(roomId, updatedByUserId)) {
+            throw new ForbiddenException("Bạn không trong phòng chat này");
+        }
+
+        String oldName = room.getName();
+        room.setName(newName);
+        ChatRoom saved = roomRepo.save(room);
+
+        // [Chat] Tin nhắn hệ thống thông báo đổi tên
+        String sysMsg = updater.getUsername() + " đã đổi tên nhóm từ \"" + oldName + "\" thành \"" + newName + "\"";
+        sendSystemMessage(roomId, sysMsg);
+        return saved;
+    }
+
+    // [Chat] Thêm nhiều thành viên vào nhóm (Manager dùng)
+    @Transactional
+    public void addMembers(Long roomId, List<Long> userIds, Long addedByUserId) {
+        User addedBy = userRepo.findById(addedByUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+        if (!memberRepo.existsByRoomIdAndUserId(roomId, addedByUserId)) {
+            throw new ForbiddenException("Bạn không trong phòng chat này");
+        }
+
+        for (Long uid : userIds) {
+            if (!memberRepo.existsByRoomIdAndUserId(roomId, uid)) {
+                addMemberWithRole(roomId, uid, "MEMBER");
+                // [Chat] Tin nhắn hệ thống cho mỗi thành viên được thêm
+                userRepo.findById(uid).ifPresent(newUser -> {
+                    String sysMsg = addedBy.getUsername() + " đã thêm " + newUser.getUsername() + " vào nhóm";
+                    sendSystemMessage(roomId, sysMsg);
+                });
+            }
+        }
+    }
+
+    // [Chat] Xóa thành viên khỏi nhóm
+    @Transactional
+    public void removeMemberFromRoom(Long roomId, Long userId, Long removedByUserId) {
+        User removedBy = userRepo.findById(removedByUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+        User target = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+
+        String sysMsg;
+        if (userId.equals(removedByUserId)) {
+            sysMsg = target.getUsername() + " đã rời khỏi nhóm";
+        } else {
+            sysMsg = removedBy.getUsername() + " đã xóa " + target.getUsername() + " khỏi nhóm";
+        }
+
+        memberRepo.deleteByRoomIdAndUserId(roomId, userId);
+        sendSystemMessage(roomId, sysMsg);
+    }
+
+    // [Chat] Lấy danh sách thành viên trong phòng chat
+    public List<ChatRoomMember> getRoomMembers(Long roomId) {
+        return memberRepo.findByRoomId(roomId);
+    }
+
+    // [Chat] Tìm kiếm tin nhắn theo keyword trong phòng chat
+    public List<Message> searchMessages(Long roomId, String keyword) {
+        return messageRepo.searchMessages(roomId, keyword);
+    }
+
+    // ── PRIVATE HELPERS ──────────────────────────────────────────
+
+    // [Chat] Thêm thành viên với role cụ thể
+    private void addMemberWithRole(Long roomId, Long userId, String role) {
         if (!memberRepo.existsByRoomIdAndUserId(roomId, userId)) {
             ChatRoomMember member = new ChatRoomMember();
             roomRepo.findById(roomId).ifPresent(member::setRoom);
             userRepo.findById(userId).ifPresent(member::setUser);
+            member.setRole(role);
             memberRepo.save(member);
         }
     }
 
-    // [Chat] Xóa thành viên khỏi phòng chat
-    @Transactional
-    public void removeMember(Long roomId, Long userId) {
-        memberRepo.deleteByRoomIdAndUserId(roomId, userId);
+    // [Chat] Gửi tin nhắn hệ thống vào phòng (dùng sender = creator của room hoặc
+    // bất kỳ admin)
+    private void sendSystemMessage(Long roomId, String content) {
+        ChatRoom room = roomRepo.findById(roomId).orElse(null);
+        if (room == null)
+            return;
+
+        // [Chat] Lấy creator làm sender ảo cho tin nhắn hệ thống
+        User systemUser = room.getCreatedBy();
+        if (systemUser == null)
+            return;
+
+        Message sys = new Message();
+        sys.setRoom(room);
+        sys.setSender(systemUser);
+        sys.setMessage(content);
+        sys.setMessageType(MessageType.SYSTEM);
+        Message saved = messageRepo.save(sys);
+
+        broadcastEvent(roomId, ChatEventType.NEW_MESSAGE, MessageDTO.from(saved), null, systemUser.getId());
+    }
+
+    // [Chat] Thêm thành viên vào phòng chat
+    public void addMember(Long roomId, Long userId) {
+        addMemberWithRole(roomId, userId, "MEMBER");
     }
 
     // ══════════════════════════════════════════════════════════════
     // [Chat] GỬI TIN NHẮN - Core messaging qua WebSocket
     // ══════════════════════════════════════════════════════════════
-
-    // [Chat] Gửi tin nhắn real-time - Lưu DB rồi broadcast qua WebSocket
-    @Transactional
-    public Message sendMessage(Long roomId, Long senderId, String content, MessageType type) {
-        ChatRoom room = roomRepo.findById(roomId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng chat"));
-        User sender = userRepo.findById(senderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
-        if (!memberRepo.existsByRoomIdAndUserId(roomId, senderId)) {
-            throw new ForbiddenException("Bạn không trong phòng chat này");
-        }
-
-        Message msg = new Message();
-        msg.setRoom(room);
-        msg.setSender(sender);
-        msg.setMessage(content);
-        msg.setMessageType(type);
-        msg.setStatus(MessageStatus.SENT);
-        Message saved = messageRepo.save(msg);
-
-        // [Chat] Broadcast tin nhắn mới qua WebSocket tới tất cả members trong room
-        broadcastEvent(roomId, ChatEventType.NEW_MESSAGE, MessageDTO.from(saved), null, senderId);
-        return saved;
-    }
 
     // [Chat] Gửi tin nhắn nâng cao - Hỗ trợ reply, metadata, file
     @Transactional
@@ -181,7 +334,6 @@ public class ChatService {
         msg.setSender(sender);
         msg.setMessage(content);
         msg.setMessageType(type);
-        msg.setStatus(MessageStatus.SENT);
         msg.setReplyToId(replyToId);
         msg.setMetadata(metadata);
         msg.setFileUrl(fileUrl);
@@ -205,11 +357,6 @@ public class ChatService {
         return messageRepo.findByRoomIdOrderByCreatedAtAsc(roomId);
     }
 
-    // [Chat] Polling - Lấy tin nhắn mới hơn lastMessageId
-    public List<Message> getNewMessages(Long roomId, Long lastMessageId) {
-        return messageRepo.findNewMessages(roomId, lastMessageId);
-    }
-
     // ══════════════════════════════════════════════════════════════
     // [Chat] THU HỒI - Xóa tin nhắn gửi nhầm ở cả 2 phía
     // ══════════════════════════════════════════════════════════════
@@ -226,7 +373,6 @@ public class ChatService {
         }
 
         msg.setIsRecalled(true);
-        msg.setRecalledAt(LocalDateTime.now());
         msg.setMessage("Tin nhắn đã bị thu hồi");
         Message saved = messageRepo.save(msg);
 
@@ -325,12 +471,6 @@ public class ChatService {
 
         // [Chat] Tạo read receipt cho tin nhắn cuối cùng
         markAsSeen(userId, lastSeenMessageId);
-    }
-
-    // [Chat] Lấy danh sách người đã xem tin nhắn
-    public List<ReadReceiptDTO> getSeenBy(Long messageId) {
-        return readReceiptRepo.findByMessageId(messageId).stream()
-                .map(ReadReceiptDTO::from).toList();
     }
 
     // ══════════════════════════════════════════════════════════════

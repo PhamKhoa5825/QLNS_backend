@@ -1,9 +1,13 @@
 package com.example.qlns.Controller;
 
+import com.example.qlns.DTO.Request.AddMembersRequest;
+import com.example.qlns.DTO.Request.CreateGroupRoomRequest;
 import com.example.qlns.DTO.Request.SendMessageRequest;
+import com.example.qlns.DTO.Request.UpdateRoomNameRequest;
 import com.example.qlns.DTO.Response.ChatRoomDTO;
 import com.example.qlns.DTO.Response.ContactDTO;
 import com.example.qlns.DTO.Response.MessageDTO;
+import com.example.qlns.DTO.Response.RoomMemberDTO;
 import com.example.qlns.Entity.Message;
 import com.example.qlns.Enum.MessageType;
 import com.example.qlns.Service.ChatService;
@@ -48,6 +52,45 @@ public class ChatController {
         return ResponseEntity.ok(ChatRoomDTO.from(chatService.getOrCreatePrivateRoom(userId1, userId2)));
     }
 
+    // [Chat] Tạo nhóm chat tùy chỉnh (Manager tạo nhóm cho team)
+    @PostMapping("/rooms/group")
+    public ResponseEntity<ChatRoomDTO> createGroupRoom(@RequestBody CreateGroupRoomRequest req) {
+        return ResponseEntity.ok(ChatRoomDTO.from(
+                chatService.createGroupRoom(req.getName(), req.getMemberUserIds(), req.getCreatedByUserId())));
+    }
+
+    // [Chat] Đổi tên phòng chat nhóm
+    @PutMapping("/rooms/{roomId}/name")
+    public ResponseEntity<ChatRoomDTO> updateRoomName(@PathVariable Long roomId,
+                                                       @RequestBody UpdateRoomNameRequest req) {
+        return ResponseEntity.ok(ChatRoomDTO.from(
+                chatService.updateRoomName(roomId, req.getName(), req.getUpdatedByUserId())));
+    }
+
+    // [Chat] Thêm thành viên vào nhóm
+    @PostMapping("/rooms/{roomId}/members")
+    public ResponseEntity<Void> addMembers(@PathVariable Long roomId,
+                                           @RequestBody AddMembersRequest req) {
+        chatService.addMembers(roomId, req.getMemberUserIds(), req.getAddedByUserId());
+        return ResponseEntity.ok().build();
+    }
+
+    // [Chat] Xóa / Rời nhóm (nếu userId == removedByUserId thì tự rời)
+    @DeleteMapping("/rooms/{roomId}/members/{userId}")
+    public ResponseEntity<Void> removeMember(@PathVariable Long roomId,
+                                              @PathVariable Long userId,
+                                              @RequestParam Long removedByUserId) {
+        chatService.removeMemberFromRoom(roomId, userId, removedByUserId);
+        return ResponseEntity.ok().build();
+    }
+
+    // [Chat] Lấy danh sách thành viên trong phòng chat
+    @GetMapping("/rooms/{roomId}/members")
+    public ResponseEntity<List<RoomMemberDTO>> getRoomMembers(@PathVariable Long roomId) {
+        return ResponseEntity.ok(chatService.getRoomMembers(roomId).stream()
+                .map(RoomMemberDTO::from).collect(Collectors.toList()));
+    }
+
     // ══════════════════════════════════════════════════════════════
     // [Chat] TIN NHẮN - REST endpoints (fallback khi WebSocket không khả dụng)
     // ══════════════════════════════════════════════════════════════
@@ -68,6 +111,14 @@ public class ChatController {
     @GetMapping("/messages/{roomId}")
     public ResponseEntity<List<MessageDTO>> getMessages(@PathVariable Long roomId) {
         return ResponseEntity.ok(chatService.getMessages(roomId).stream()
+                .map(MessageDTO::from).collect(Collectors.toList()));
+    }
+
+    // [Chat] Tìm kiếm tin nhắn theo keyword trong phòng
+    @GetMapping("/messages/{roomId}/search")
+    public ResponseEntity<List<MessageDTO>> searchMessages(@PathVariable Long roomId,
+                                                            @RequestParam String keyword) {
+        return ResponseEntity.ok(chatService.searchMessages(roomId, keyword).stream()
                 .map(MessageDTO::from).collect(Collectors.toList()));
     }
 
@@ -143,3 +194,4 @@ public class ChatController {
         return ResponseEntity.ok(chatService.searchContacts(keyword, skill, position, status));
     }
 }
+

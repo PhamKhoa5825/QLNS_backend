@@ -11,6 +11,7 @@ public class ChatRoomDTO {
 
     // [Chat] Người tạo phòng chat
     private Long createdBy;
+    private String createdByName;
 
     // [Chat] Tin nhắn mới nhất (hiển thị preview ở danh sách phòng)
     private String lastMessage;
@@ -27,7 +28,10 @@ public class ChatRoomDTO {
         dto.id = cr.getId();
         dto.name = cr.getName();
         dto.type = cr.getType().name();
-        dto.createdBy = cr.getCreatedBy();
+        if (cr.getCreatedBy() != null) {
+            dto.createdBy = cr.getCreatedBy().getId();
+            dto.createdByName = cr.getCreatedBy().getUsername();
+        }
         dto.createdAt = cr.getCreatedAt() != null ? cr.getCreatedAt().toString() : null;
         if (cr.getDepartment() != null)
             dto.departmentId = cr.getDepartment().getId();
@@ -54,6 +58,10 @@ public class ChatRoomDTO {
 
     public Long getCreatedBy() {
         return createdBy;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
     }
 
     public String getLastMessage() {
