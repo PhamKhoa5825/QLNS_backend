@@ -60,39 +60,42 @@ public class EmployeeService {
     /**
      * Trả về DTO list — gọi EmployeeDTO.from() BÊN TRONG transaction
      * → emp.getDepartment() (LAZY) không crash.
+     * Kèm userId + accountStatus từ User table.
      */
     @Transactional(readOnly = true)
     public List<EmployeeDTO> getAllDTO() {
         return empRepo.findAll().stream()
-                .map(e -> EmployeeDTO.from(e, getRoleForEmployee(e)))
+                .map(this::buildDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public EmployeeDTO getByIdDTO(Long id) {
-        Employee emp = getById(id);
-        return EmployeeDTO.from(emp, getRoleForEmployee(emp));
+        return buildDTO(getById(id));
     }
 
     @Transactional(readOnly = true)
     public List<EmployeeDTO> getByDepartmentDTO(Long deptId) {
         return getByDepartment(deptId).stream()
-                .map(e -> EmployeeDTO.from(e, getRoleForEmployee(e)))
+                .map(this::buildDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<EmployeeDTO> searchDTO(String keyword) {
         return search(keyword).stream()
-                .map(e -> EmployeeDTO.from(e, getRoleForEmployee(e)))
+                .map(this::buildDTO)
                 .collect(Collectors.toList());
     }
 
-    /** Helper: lấy role từ User table cho 1 employee */
-    private String getRoleForEmployee(Employee emp) {
+    /** Helper: build DTO với đầy đủ userId, role, accountStatus */
+    private EmployeeDTO buildDTO(Employee emp) {
         return userRepo.findByEmail(emp.getEmail())
-                .map(u -> u.getRole().name())
-                .orElse("EMPLOYEE");
+                .map(user -> EmployeeDTO.from(emp,
+                        user.getRole().name(),
+                        user.getId(),
+                        user.getStatus().name()))
+                .orElse(EmployeeDTO.from(emp, "EMPLOYEE"));
     }
 
     // ── GHI ───────────────────────────────────────────────────
@@ -146,5 +149,19 @@ public class EmployeeService {
             u.setStatus(UserStatus.ACTIVE);
             userRepo.save(u);
         });
+    }
+
+    @Transactional
+    public EmployeeDTO updateRole(Long employeeId, String newRole) {
+        Employee emp = getById(employeeId);
+        userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
+            try {
+                u.setRole(Role.valueOf(newRole.toUpperCase()));
+                userRepo.save(u);
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid Role: " + newRole);
+            }
+        });
+        return buildDTO(emp);
     }
 }

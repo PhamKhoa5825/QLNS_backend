@@ -112,6 +112,7 @@ public class SecurityConfig {
 
                         // 7. System Logs (Nhật ký hệ thống) - Chỉ Admin
                         .requestMatchers("/api/admin/logs/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/accounts/**").hasRole("ADMIN")
 
                         // 8. System Settings
                         .requestMatchers("/api/settings/**").hasRole("ADMIN")

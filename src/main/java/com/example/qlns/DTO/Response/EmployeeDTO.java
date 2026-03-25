@@ -4,6 +4,7 @@ import com.example.qlns.Entity.Employee;
 
 public class EmployeeDTO {
     private Long id;
+    private Long userId;
     private String fullName;
     private String email;
     private String phone;
@@ -14,13 +15,19 @@ public class EmployeeDTO {
     private String position;
     private String joinDate;
     private String status;
+    private String accountStatus;
     private Long departmentId;
     private String departmentName;
     private String role;            // Từ bảng users
 
     public static EmployeeDTO from(Employee emp, String role) {
+        return from(emp, role, null, null);
+    }
+
+    public static EmployeeDTO from(Employee emp, String role, Long userId, String accountStatus) {
         EmployeeDTO dto = new EmployeeDTO();
         dto.id = emp.getId();
+        dto.userId = userId;
         dto.fullName = emp.getFullName();
         dto.email = emp.getEmail();
         dto.phone = emp.getPhone();
@@ -31,6 +38,7 @@ public class EmployeeDTO {
         dto.position = emp.getPosition();
         dto.joinDate = emp.getJoinDate() != null ? emp.getJoinDate().toString() : null;
         dto.status = emp.getStatus().name();
+        dto.accountStatus = accountStatus;
         dto.role = role;
         if (emp.getDepartment() != null) {
             dto.departmentId = emp.getDepartment().getId();
@@ -39,59 +47,20 @@ public class EmployeeDTO {
         return dto;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public String getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
-
-    public String getPosition() {
-        return position;
-    }
-
-    public String getJoinDate() {
-        return joinDate;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public Long getDepartmentId() {
-        return departmentId;
-    }
-
-    public String getDepartmentName() {
-        return departmentName;
-    }
-
-    public String getRole() {
-        return role;
-    }
+    public Long getId() { return id; }
+    public Long getUserId() { return userId; }
+    public String getFullName() { return fullName; }
+    public String getEmail() { return email; }
+    public String getPhone() { return phone; }
+    public String getAddress() { return address; }
+    public String getDateOfBirth() { return dateOfBirth; }
+    public String getGender() { return gender; }
+    public String getAvatarUrl() { return avatarUrl; }
+    public String getPosition() { return position; }
+    public String getJoinDate() { return joinDate; }
+    public String getStatus() { return status; }
+    public String getAccountStatus() { return accountStatus; }
+    public Long getDepartmentId() { return departmentId; }
+    public String getDepartmentName() { return departmentName; }
+    public String getRole() { return role; }
 }

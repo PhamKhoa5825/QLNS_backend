@@ -81,4 +81,9 @@ class EmployeeController {
         empService.reactivate(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}/role")
+    public ResponseEntity<EmployeeDTO> updateEmployeeRole(@PathVariable Long id, @RequestBody com.example.qlns.DTO.Request.UpdateRoleRequest req) {
+        return ResponseEntity.ok(empService.updateRole(id, req.getRole()));
+    }
 }
