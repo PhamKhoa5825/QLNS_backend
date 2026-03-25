@@ -5,7 +5,9 @@ public class CreateRequestRequest {
     private String description;     // Tuỳ chọn
     private String fileUrl;         // Tuỳ chọn (link sau upload)
     private String fileName;        // Tuỳ chọn
+    private String targetRole;      // "MANAGER" hoặc "ADMIN", mặc định MANAGER
 
+    public String getTargetRole() { return targetRole; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public String getFileUrl() { return fileUrl; }

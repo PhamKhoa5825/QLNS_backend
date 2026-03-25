@@ -117,6 +117,16 @@ public class SecurityConfig {
                         // 8. System Settings
                         .requestMatchers("/api/settings/**").hasRole("ADMIN")
 
+                        // 9. Admin Dashboard Stats (MỚI)
+                        .requestMatchers("/api/admin/dashboard/**").hasRole("ADMIN")
+
+                        // 10. Backup/Restore (MỚI) - Chỉ Admin
+                        .requestMatchers("/api/admin/backup/**").hasRole("ADMIN")
+
+                        // 11. Employee resign-check (MỚI) - Manager + Admin
+                        .requestMatchers(HttpMethod.GET, "/api/employees/*/resign-check").hasAnyRole("MANAGER", "ADMIN")
+
+
                         // Tất cả các request khác phải authenticated
                         .anyRequest().authenticated()
                 )

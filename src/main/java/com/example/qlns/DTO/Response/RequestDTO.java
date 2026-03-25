@@ -2,6 +2,7 @@ package com.example.qlns.DTO.Response;
 
 import com.example.qlns.Entity.Request;
 import com.example.qlns.Enum.RequestStatus;
+import com.example.qlns.Enum.TargetRole;
 
 // ── Request DTO (trả về Android) ──────────────────────────────
 public class RequestDTO {
@@ -18,6 +19,7 @@ public class RequestDTO {
     private Long reviewedById;
     private String reviewedByName;
     private String rejectionReason;
+    private String targetRole;
     private String createdAt;        // String thay vì LocalDateTime → không cần JavaTimeModule
     private String updatedAt;
 
@@ -40,6 +42,7 @@ public class RequestDTO {
         dto.rejectionReason = r.getRejectionReason();
         dto.createdAt      = r.getCreatedAt() != null ? r.getCreatedAt().toString() : null;
         dto.updatedAt      = r.getUpdatedAt() != null ? r.getUpdatedAt().toString() : null;
+        dto.targetRole = r.getTargetRole() != null ? r.getTargetRole().name() : "MANAGER";
         return dto;
     }
 
@@ -56,6 +59,7 @@ public class RequestDTO {
     public Long getReviewedById() { return reviewedById; }
     public String getReviewedByName() { return reviewedByName; }
     public String getRejectionReason() { return rejectionReason; }
+    public String getTargetRole() { return targetRole; }
     public String getCreatedAt() { return createdAt; }
     public String getUpdatedAt() { return updatedAt; }
 }

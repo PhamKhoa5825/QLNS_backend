@@ -32,6 +32,8 @@ ALTER TABLE tasks
 ALTER TABLE task_updates
     MODIFY COLUMN status ENUM('PENDING','ACCEPTED','DONE','OVERDUE') NOT NULL;
 
+ALTER TABLE requests ADD COLUMN target_role ENUM('MANAGER','ADMIN') NOT NULL DEFAULT 'MANAGER';
+
 -- ── Đảm bảo cột late_minutes tồn tại ─────────────────────────
 -- ALTER TABLE attendance
 --     ADD COLUMN IF NOT EXISTS late_minutes INT NOT NULL DEFAULT 0;

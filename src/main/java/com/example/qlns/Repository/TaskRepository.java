@@ -35,4 +35,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findOverdueTasksToMark(@Param("now") LocalDateTime now);
 
     long countByAssignedToIdAndStatus(Long employeeId, TaskStatus status);
+
+    long countByStatus(TaskStatus status);
 }

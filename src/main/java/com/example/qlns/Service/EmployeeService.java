@@ -1,37 +1,52 @@
 package com.example.qlns.Service;
 
 import com.example.qlns.DTO.Response.EmployeeDTO;
-import com.example.qlns.Entity.Employee;
-import com.example.qlns.Entity.User;
-import com.example.qlns.Enum.EmployeeStatus;
-import com.example.qlns.Enum.Role;
-import com.example.qlns.Enum.UserStatus;
-import com.example.qlns.Exception.DuplicateException;
-import com.example.qlns.Exception.ResourceNotFoundException;
-import com.example.qlns.Repository.EmployeeRepository;
-import com.example.qlns.Repository.UserRepository;
+import com.example.qlns.Entity.*;
+import com.example.qlns.Enum.*;
+import com.example.qlns.Exception.*;
+import com.example.qlns.Repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * EmployeeService v2 — Thêm resign cascade + validate role
+ *
+ * Thay đổi so với bản cũ:
+ * 1. resign() giờ cascade: OVERDUE task pending, gỡ Manager PB, khóa TK
+ * 2. resignWithInfo() trả về thông tin chi tiết cho FE hiển thị warning
+ * 3. updateRole() thêm validate conflict Manager
+ */
 @Service
 public class EmployeeService {
     private final EmployeeRepository empRepo;
     private final UserRepository userRepo;
+    private final TaskRepository taskRepo;
+    private final DepartmentRepository deptRepo;
+    private final SystemLogService logService;
 
-    EmployeeService(EmployeeRepository empRepo, UserRepository userRepo) {
+    EmployeeService(EmployeeRepository empRepo,
+                    UserRepository userRepo,
+                    TaskRepository taskRepo,
+                    DepartmentRepository deptRepo,
+                    SystemLogService logService) {
         this.empRepo = empRepo;
         this.userRepo = userRepo;
+        this.taskRepo = taskRepo;
+        this.deptRepo = deptRepo;
+        this.logService = logService;
     }
 
-    // ── ĐỌC (có @Transactional để LAZY không crash) ──────────
+    // ══════════════════════════════════════════════════════════
+    //  ĐỌC — giữ nguyên logic cũ
+    // ══════════════════════════════════════════════════════════
 
     @Transactional(readOnly = true)
-    public List<Employee> getAll() {
-        return empRepo.findAll();
-    }
+    public List<Employee> getAll() { return empRepo.findAll(); }
 
     @Transactional(readOnly = true)
     public Employee getById(Long id) {
@@ -57,16 +72,9 @@ public class EmployeeService {
                 .orElse("EMPLOYEE");
     }
 
-    /**
-     * Trả về DTO list — gọi EmployeeDTO.from() BÊN TRONG transaction
-     * → emp.getDepartment() (LAZY) không crash.
-     * Kèm userId + accountStatus từ User table.
-     */
     @Transactional(readOnly = true)
     public List<EmployeeDTO> getAllDTO() {
-        return empRepo.findAll().stream()
-                .map(this::buildDTO)
-                .collect(Collectors.toList());
+        return empRepo.findAll().stream().map(this::buildDTO).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -76,19 +84,14 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public List<EmployeeDTO> getByDepartmentDTO(Long deptId) {
-        return getByDepartment(deptId).stream()
-                .map(this::buildDTO)
-                .collect(Collectors.toList());
+        return getByDepartment(deptId).stream().map(this::buildDTO).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<EmployeeDTO> searchDTO(String keyword) {
-        return search(keyword).stream()
-                .map(this::buildDTO)
-                .collect(Collectors.toList());
+        return search(keyword).stream().map(this::buildDTO).collect(Collectors.toList());
     }
 
-    /** Helper: build DTO với đầy đủ userId, role, accountStatus */
     private EmployeeDTO buildDTO(Employee emp) {
         return userRepo.findByEmail(emp.getEmail())
                 .map(user -> EmployeeDTO.from(emp,
@@ -98,7 +101,9 @@ public class EmployeeService {
                 .orElse(EmployeeDTO.from(emp, "EMPLOYEE"));
     }
 
-    // ── GHI ───────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════
+    //  TẠO + CẬP NHẬT — giữ nguyên logic cũ
+    // ══════════════════════════════════════════════════════════
 
     @Transactional
     public Employee create(Employee emp, String email, String password, Role role) {
@@ -129,15 +134,104 @@ public class EmployeeService {
         return empRepo.save(emp);
     }
 
-    @Transactional
-    public void resign(Long id) {
+    // ══════════════════════════════════════════════════════════
+    //  MỚI: Kiểm tra trước khi nghỉ việc (FE gọi trước để hiện warning)
+    // ══════════════════════════════════════════════════════════
+
+    /**
+     * GET /api/employees/{id}/resign-check
+     * Trả về thông tin ảnh hưởng nếu cho NV nghỉ việc.
+     * FE dùng để hiện dialog cảnh báo trước khi xác nhận.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> checkResignImpact(Long id) {
         Employee emp = getById(id);
+        Map<String, Object> impact = new HashMap<>();
+        impact.put("employeeId", emp.getId());
+        impact.put("employeeName", emp.getFullName());
+
+        // Task đang pending/accepted
+        long pendingTasks = taskRepo.countByAssignedToIdAndStatus(id, TaskStatus.PENDING);
+        long acceptedTasks = taskRepo.countByAssignedToIdAndStatus(id, TaskStatus.ACCEPTED);
+        impact.put("pendingTasks", pendingTasks);
+        impact.put("acceptedTasks", acceptedTasks);
+
+        // NV có đang là Manager của PB nào không?
+        List<Department> managedDepts = deptRepo.findByManagerId(id);
+        impact.put("managedDepartments", managedDepts.stream()
+                .map(d -> Map.of("id", d.getId(), "name", d.getName()))
+                .collect(Collectors.toList()));
+        impact.put("isManager", !managedDepts.isEmpty());
+
+        return impact;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  CẢI THIỆN: Nghỉ việc có cascade
+    // ══════════════════════════════════════════════════════════
+
+    /**
+     * Cho NV nghỉ việc + cascade:
+     * 1. Đổi status = RESIGNED
+     * 2. Task PENDING/ACCEPTED -> OVERDUE
+     * 3. Gỡ Manager khỏi PB (nếu NV đang là Manager)
+     * 4. Khóa tài khoản (INACTIVE)
+     *
+     * Trả về Map chứa thông tin đã xử lý (FE hiển thị kết quả).
+     */
+    @Transactional
+    public Map<String, Object> resignWithCascade(Long id) {
+        Employee emp = getById(id);
+        Map<String, Object> result = new HashMap<>();
+        result.put("employeeId", emp.getId());
+        result.put("employeeName", emp.getFullName());
+
+        // 1. Đổi status NV
         emp.setStatus(EmployeeStatus.RESIGNED);
         empRepo.save(emp);
+
+        // 2. Task PENDING/ACCEPTED -> OVERDUE
+        List<Task> pendingTasks = taskRepo.findByAssignedToIdAndStatus(id, TaskStatus.PENDING);
+        List<Task> acceptedTasks = taskRepo.findByAssignedToIdAndStatus(id, TaskStatus.ACCEPTED);
+        int taskCount = 0;
+        for (Task task : pendingTasks) {
+            task.setStatus(TaskStatus.OVERDUE);
+            taskRepo.save(task);
+            taskCount++;
+        }
+        for (Task task : acceptedTasks) {
+            task.setStatus(TaskStatus.OVERDUE);
+            taskRepo.save(task);
+            taskCount++;
+        }
+        result.put("tasksMarkedOverdue", taskCount);
+
+        // 3. Gỡ Manager khỏi PB
+        List<Department> managedDepts = deptRepo.findByManagerId(id);
+        for (Department dept : managedDepts) {
+            dept.setManager(null);
+            deptRepo.save(dept);
+        }
+        result.put("departmentsUnmanaged", managedDepts.stream()
+                .map(Department::getName).collect(Collectors.toList()));
+
+        // 4. Khóa tài khoản
         userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
             u.setStatus(UserStatus.INACTIVE);
             userRepo.save(u);
         });
+        result.put("accountLocked", true);
+
+        return result;
+    }
+
+    /**
+     * Giữ method resign() cũ cho tương thích ngược.
+     * Gọi resignWithCascade() bên trong.
+     */
+    @Transactional
+    public void resign(Long id) {
+        resignWithCascade(id);
     }
 
     @Transactional
@@ -151,17 +245,57 @@ public class EmployeeService {
         });
     }
 
+    // ══════════════════════════════════════════════════════════
+    //  CẢI THIỆN: Đổi role có validate
+    // ══════════════════════════════════════════════════════════
+
+    /**
+     * Đổi role NV + validate:
+     * - Nếu đổi sang MANAGER: check NV có thuộc PB không, PB đó đã có Manager chưa
+     * - Nếu hạ từ MANAGER: cảnh báo PB sẽ mất trưởng phòng
+     */
     @Transactional
     public EmployeeDTO updateRole(Long employeeId, String newRole) {
         Employee emp = getById(employeeId);
-        userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
-            try {
-                u.setRole(Role.valueOf(newRole.toUpperCase()));
-                userRepo.save(u);
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Invalid Role: " + newRole);
+        Role targetRole;
+        try {
+            targetRole = Role.valueOf(newRole.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Role không hợp lệ: " + newRole);
+        }
+
+        // Validate khi đổi sang MANAGER
+        if (targetRole == Role.MANAGER) {
+            if (emp.getDepartment() == null) {
+                throw new BadRequestException(
+                        "Nhân viên " + emp.getFullName() + " chưa thuộc phòng ban nào. "
+                                + "Vui lòng phân công phòng ban trước khi đổi quyền Manager.");
             }
+            // Check PB đã có Manager khác chưa
+            Department dept = emp.getDepartment();
+            if (dept.getManager() != null && !dept.getManager().getId().equals(emp.getId())) {
+                throw new BadRequestException(
+                        "Phòng ban " + dept.getName() + " đã có trưởng phòng: "
+                                + dept.getManager().getFullName()
+                                + ". Vui lòng gỡ trưởng phòng cũ trước.");
+            }
+        }
+
+        // Thực hiện đổi role
+        userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
+            u.setRole(targetRole);
+            userRepo.save(u);
         });
+
+        // Nếu đổi sang MANAGER và PB chưa có Manager -> tự gán luôn
+        if (targetRole == Role.MANAGER && emp.getDepartment() != null) {
+            Department dept = emp.getDepartment();
+            if (dept.getManager() == null) {
+                dept.setManager(emp);
+                deptRepo.save(dept);
+            }
+        }
+
         return buildDTO(emp);
     }
 }

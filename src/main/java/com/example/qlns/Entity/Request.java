@@ -1,6 +1,7 @@
 package com.example.qlns.Entity;
 
 import com.example.qlns.Enum.RequestStatus;
+import com.example.qlns.Enum.TargetRole;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -44,6 +45,10 @@ public class Request {
     @Column(name = "rejection_reason", length = 500)
     private String rejectionReason;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_role", nullable = false)
+    private TargetRole targetRole = TargetRole.MANAGER; // Manager/Admin
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -71,6 +76,8 @@ public class Request {
     public void setReviewedBy(Employee reviewedBy) { this.reviewedBy = reviewedBy; }
     public String getRejectionReason() { return rejectionReason; }
     public void setRejectionReason(String reason) { this.rejectionReason = reason; }
+    public TargetRole getTargetRole() { return targetRole; }
+    public void setTargetRole(TargetRole targetRole) { this.targetRole = targetRole; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

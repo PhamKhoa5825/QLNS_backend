@@ -6,6 +6,7 @@ import com.example.qlns.DTO.Response.RequestDTO;
 import com.example.qlns.Entity.Employee;
 import com.example.qlns.Entity.Request;
 import com.example.qlns.Enum.RequestStatus;
+import com.example.qlns.Enum.TargetRole;
 import com.example.qlns.Exception.*;
 import com.example.qlns.Repository.EmployeeRepository;
 import com.example.qlns.Repository.RequestRepository;
@@ -44,6 +45,16 @@ public class RequestService {
         r.setDescription(req.getDescription());
         r.setFileUrl(req.getFileUrl());
         r.setFileName(req.getFileName());
+
+        // Thay đoạn set targetRole cũ bằng:
+        if (req.getTargetRole() != null) {
+            try {
+                r.setTargetRole(TargetRole.valueOf(req.getTargetRole().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                // Nếu giá trị không hợp lệ, giữ mặc định MANAGER
+            }
+        }
+        // Mặc định = "MANAGER" (đã set trong entity)
 
         return RequestDTO.from(requestRepo.save(r));
     }
@@ -90,14 +101,14 @@ public class RequestService {
     // ── Manager: xem tất cả đơn phòng ban ────────────────────
     @Transactional(readOnly = true)
     public List<RequestDTO> getByDepartment(Long deptId) {
-        return requestRepo.findByDepartmentId(deptId)
+        return requestRepo.findByDepartmentIdAndTargetRole(deptId)
                 .stream().map(RequestDTO::from).collect(Collectors.toList());
     }
 
     // ── Manager: xem đơn chờ duyệt phòng ban ─────────────────
     @Transactional(readOnly = true)
     public List<RequestDTO> getPendingByDepartment(Long deptId) {
-        return requestRepo.findByDepartmentIdAndStatus(deptId, RequestStatus.PENDING)
+        return requestRepo.findByDepartmentIdAndStatusAndTargetRoleManager(deptId, RequestStatus.PENDING)
                 .stream().map(RequestDTO::from).collect(Collectors.toList());
     }
 
@@ -126,10 +137,10 @@ public class RequestService {
         return RequestDTO.from(requestRepo.save(r));
     }
 
-    // ── Admin: xem tất cả đơn toàn công ty ───────────────────
+    // ── Admin: xem tất cả đơn gửi tới Admin ───────────────────
     @Transactional(readOnly = true)
     public List<RequestDTO> getAllRequests() {
-        return requestRepo.findAllByOrderByCreatedAtDesc()
+        return requestRepo.findByTargetRoleOrderByCreatedAtDesc(TargetRole.ADMIN)
                 .stream().map(RequestDTO::from).collect(Collectors.toList());
     }
 }

@@ -12,7 +12,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * EmployeeController v2 — Thêm endpoint resign-check + resign cascade
+ *
+ * Endpoint mới:
+ * - GET  /api/employees/{id}/resign-check  → kiểm tra ảnh hưởng trước nghỉ việc
+ * - PUT  /api/employees/{id}/resign        → nghỉ việc có cascade (cải thiện)
+ */
 @RestController
 @RequestMapping("/api/employees")
 class EmployeeController {
@@ -70,10 +78,22 @@ class EmployeeController {
         return ResponseEntity.ok(EmployeeDTO.from(updated, empService.getRoleByEmployeeId(id)));
     }
 
+    /**
+     * MỚI: Kiểm tra ảnh hưởng trước khi cho nghỉ việc
+     * FE gọi endpoint này trước, hiện dialog cảnh báo, rồi mới gọi resign.
+     */
+    @GetMapping("/{id}/resign-check")
+    public ResponseEntity<Map<String, Object>> checkResignImpact(@PathVariable Long id) {
+        return ResponseEntity.ok(empService.checkResignImpact(id));
+    }
+
+    /**
+     * CẢI THIỆN: Nghỉ việc có cascade
+     * Trả về JSON thay vì void, cho FE biết đã xử lý gì.
+     */
     @PutMapping("/{id}/resign")
-    public ResponseEntity<Void> resign(@PathVariable Long id) {
-        empService.resign(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Map<String, Object>> resign(@PathVariable Long id) {
+        return ResponseEntity.ok(empService.resignWithCascade(id));
     }
 
     @PutMapping("/{id}/reactivate")
@@ -83,7 +103,9 @@ class EmployeeController {
     }
 
     @PutMapping("/{id}/role")
-    public ResponseEntity<EmployeeDTO> updateEmployeeRole(@PathVariable Long id, @RequestBody com.example.qlns.DTO.Request.UpdateRoleRequest req) {
+    public ResponseEntity<EmployeeDTO> updateEmployeeRole(
+            @PathVariable Long id,
+            @RequestBody com.example.qlns.DTO.Request.UpdateRoleRequest req) {
         return ResponseEntity.ok(empService.updateRole(id, req.getRole()));
     }
 }
