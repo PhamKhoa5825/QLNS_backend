@@ -2,7 +2,6 @@ package com.example.qlns.DTO.Response;
 
 import com.example.qlns.Entity.Employee;
 
-// [Chat] Danh bạ thông minh - DTO hiển thị thông tin đồng nghiệp
 public class ContactDTO {
 
     private Long employeeId;
@@ -13,10 +12,9 @@ public class ContactDTO {
     private String email;
     private String phone;
     private String avatarUrl;
-    private String status;      // ACTIVE, ON_LEAVE, BUSINESS_TRIP
+    private String status;
     private String skills;
 
-    // [Chat] Factory method từ Employee entity
     public static ContactDTO from(Employee emp, Long userId, String userStatus) {
         ContactDTO dto = new ContactDTO();
         dto.employeeId = emp.getId();

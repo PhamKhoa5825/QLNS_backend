@@ -19,11 +19,11 @@ public class ChatRoomMember {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // [Chat] Vai trò trong phòng chat (ADMIN = quản trị, MEMBER = thành viên)
+    // ADMIN = quản trị phòng chat, MEMBER = thành viên thường
     @Column(length = 20)
     private String role = "MEMBER";
 
-    // [Chat] ID tin nhắn cuối cùng đã đọc - dùng tính số tin chưa đọc
+    // ID tin nhắn cuối cùng đã đọc, dùng tính số chưa đọc
     @Column(name = "last_read_message_id")
     private Long lastReadMessageId;
 

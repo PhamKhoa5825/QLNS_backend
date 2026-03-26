@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,7 +43,7 @@ public class PollService {
     // [Chat] Bình chọn - Tạo poll mới và gửi vào phòng chat
     @Transactional
     public PollDTO createPoll(Long roomId, Long creatorId, String question,
-                               List<String> options, java.time.LocalDateTime deadline) {
+                               List<String> options, LocalDateTime deadline) {
         ChatRoom room = roomRepo.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng chat"));
         User creator = userRepo.findById(creatorId)

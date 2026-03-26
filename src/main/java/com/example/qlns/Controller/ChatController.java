@@ -10,188 +10,193 @@ import com.example.qlns.DTO.Response.MessageDTO;
 import com.example.qlns.DTO.Response.RoomMemberDTO;
 import com.example.qlns.Entity.Message;
 import com.example.qlns.Enum.MessageType;
+import com.example.qlns.Repository.UserRepository;
 import com.example.qlns.Service.ChatService;
 import com.example.qlns.Service.FileStorageService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-// [Chat] REST Controller - Xử lý các HTTP request cho chat
-// Tuân thủ MVC: Controller chỉ nhận request, validate, gọi Service, trả response
 @RestController
 @RequestMapping("/api/chat")
 public class ChatController {
 
     private final ChatService chatService;
     private final FileStorageService fileStorageService;
+    private final UserRepository userRepository;
 
-    // [Chat] Constructor injection - tuân thủ Dependency Inversion
     public ChatController(ChatService chatService,
-                          FileStorageService fileStorageService) {
+            FileStorageService fileStorageService,
+            UserRepository userRepository) {
         this.chatService = chatService;
         this.fileStorageService = fileStorageService;
+        this.userRepository = userRepository;
+    }
+
+    // Lấy userId từ JWT token trong SecurityContext
+    private Long getCurrentUserId() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found")).getId();
     }
 
     // ══════════════════════════════════════════════════════════════
-    // [Chat] PHÒNG CHAT - REST endpoints quản lý room
+    // PHÒNG CHAT
     // ══════════════════════════════════════════════════════════════
 
-    // [Chat] Lấy danh sách phòng chat của user (kèm unreadCount, lastMessage, avatarUrl)
-    @GetMapping("/rooms/user/{userId}")
-    public ResponseEntity<List<ChatRoomDTO>> getRooms(@PathVariable Long userId) {
-        return ResponseEntity.ok(chatService.getRoomsWithMetadata(userId));
+    @GetMapping("/rooms/me")
+    public ResponseEntity<List<ChatRoomDTO>> getRooms() {
+        return ResponseEntity.ok(chatService.getRoomsWithMetadata(getCurrentUserId()));
     }
 
-    // [Chat] Tạo hoặc lấy phòng chat 1-1
     @PostMapping("/rooms/private")
-    public ResponseEntity<ChatRoomDTO> getOrCreatePrivate(@RequestParam Long userId1,
-                                                          @RequestParam Long userId2) {
-        return ResponseEntity.ok(ChatRoomDTO.from(chatService.getOrCreatePrivateRoom(userId1, userId2)));
+    public ResponseEntity<ChatRoomDTO> getOrCreatePrivate(@RequestParam Long targetUserId) {
+        return ResponseEntity.ok(ChatRoomDTO.from(
+                chatService.getOrCreatePrivateRoom(getCurrentUserId(), targetUserId)));
     }
 
-    // [Chat] Tạo nhóm chat tùy chỉnh (Manager tạo nhóm cho team)
     @PostMapping("/rooms/group")
     public ResponseEntity<ChatRoomDTO> createGroupRoom(@RequestBody CreateGroupRoomRequest req) {
         return ResponseEntity.ok(ChatRoomDTO.from(
-                chatService.createGroupRoom(req.getName(), req.getMemberUserIds(), req.getCreatedByUserId())));
+                chatService.createGroupRoom(req.getName(), req.getMemberUserIds(), getCurrentUserId())));
     }
 
-    // [Chat] Đổi tên phòng chat nhóm
     @PutMapping("/rooms/{roomId}/name")
     public ResponseEntity<ChatRoomDTO> updateRoomName(@PathVariable Long roomId,
-                                                       @RequestBody UpdateRoomNameRequest req) {
+            @RequestBody UpdateRoomNameRequest req) {
         return ResponseEntity.ok(ChatRoomDTO.from(
-                chatService.updateRoomName(roomId, req.getName(), req.getUpdatedByUserId())));
+                chatService.updateRoomName(roomId, req.getName(), getCurrentUserId())));
     }
 
-    // [Chat] Thêm thành viên vào nhóm
     @PostMapping("/rooms/{roomId}/members")
     public ResponseEntity<Void> addMembers(@PathVariable Long roomId,
-                                           @RequestBody AddMembersRequest req) {
-        chatService.addMembers(roomId, req.getMemberUserIds(), req.getAddedByUserId());
+            @RequestBody AddMembersRequest req) {
+        chatService.addMembers(roomId, req.getMemberUserIds(), getCurrentUserId());
         return ResponseEntity.ok().build();
     }
 
-    // [Chat] Xóa / Rời nhóm (nếu userId == removedByUserId thì tự rời)
+    // Nếu userId == currentUserId thì tự rời, ngược lại là bị kick bởi admin
     @DeleteMapping("/rooms/{roomId}/members/{userId}")
     public ResponseEntity<Void> removeMember(@PathVariable Long roomId,
-                                              @PathVariable Long userId,
-                                              @RequestParam Long removedByUserId) {
-        chatService.removeMemberFromRoom(roomId, userId, removedByUserId);
+            @PathVariable Long userId) {
+        chatService.removeMemberFromRoom(roomId, userId, getCurrentUserId());
         return ResponseEntity.ok().build();
     }
 
-    // [Chat] Lấy danh sách thành viên trong phòng chat
     @GetMapping("/rooms/{roomId}/members")
     public ResponseEntity<List<RoomMemberDTO>> getRoomMembers(@PathVariable Long roomId) {
-        return ResponseEntity.ok(chatService.getRoomMembers(roomId).stream()
-                .map(RoomMemberDTO::from).collect(Collectors.toList()));
+        return ResponseEntity.ok(chatService.getRoomMembersDTO(roomId));
     }
 
     // ══════════════════════════════════════════════════════════════
-    // [Chat] TIN NHẮN - REST endpoints (fallback khi WebSocket không khả dụng)
+    // TIN NHẮN
     // ══════════════════════════════════════════════════════════════
 
-    // [Chat] Gửi tin nhắn qua REST (backup cho WebSocket)
+    // Fallback khi WebSocket không khả dụng
     @PostMapping("/messages")
     public ResponseEntity<MessageDTO> sendMessage(@RequestBody SendMessageRequest req) {
         MessageType type = req.getMessageType() != null
-                ? MessageType.valueOf(req.getMessageType()) : MessageType.TEXT;
+                ? MessageType.valueOf(req.getMessageType())
+                : MessageType.TEXT;
         Message msg = chatService.sendMessageAdvanced(
-                req.getRoomId(), req.getSenderId(), req.getMessage(), type,
-                req.getReplyToId(), req.getMetadata(), null, null, null
-        );
+                req.getRoomId(), getCurrentUserId(), req.getMessage(), type,
+                req.getReplyToId(), req.getMetadata(), null, null, null);
         return ResponseEntity.ok(MessageDTO.from(msg));
     }
 
-    // [Chat] Lấy toàn bộ tin nhắn trong phòng
     @GetMapping("/messages/{roomId}")
     public ResponseEntity<List<MessageDTO>> getMessages(@PathVariable Long roomId) {
         return ResponseEntity.ok(chatService.getMessages(roomId).stream()
-                .map(MessageDTO::from).collect(Collectors.toList()));
+                .map(msg -> {
+                    MessageDTO dto = MessageDTO.from(msg);
+                    dto.setSenderName(msg.getSender() != null
+                            ? chatService.resolveDisplayName(msg.getSender().getId())
+                            : null);
+                    if (msg.getReplyToId() != null) {
+                        chatService.findMessageById(msg.getReplyToId())
+                                .ifPresent(reply -> {
+                                    MessageDTO replyDto = MessageDTO.from(reply);
+                                    replyDto.setSenderName(reply.getSender() != null
+                                            ? chatService.resolveDisplayName(reply.getSender().getId())
+                                            : null);
+                                    dto.setReplyToMessage(replyDto);
+                                });
+                    }
+                    return dto;
+                }).collect(Collectors.toList()));
     }
 
-    // [Chat] Tìm kiếm tin nhắn theo keyword trong phòng
     @GetMapping("/messages/{roomId}/search")
     public ResponseEntity<List<MessageDTO>> searchMessages(@PathVariable Long roomId,
-                                                            @RequestParam String keyword) {
+            @RequestParam String keyword) {
         return ResponseEntity.ok(chatService.searchMessages(roomId, keyword).stream()
-                .map(MessageDTO::from).collect(Collectors.toList()));
+                .map(msg -> {
+                    MessageDTO dto = MessageDTO.from(msg);
+                    dto.setSenderName(msg.getSender() != null
+                            ? chatService.resolveDisplayName(msg.getSender().getId())
+                            : null);
+                    return dto;
+                }).collect(Collectors.toList()));
+    }
+
+    // Gọi khi client mở màn hình chat để reset unreadCount
+    @PostMapping("/rooms/{roomId}/seen")
+    public ResponseEntity<Void> markRoomSeen(@PathVariable Long roomId,
+            @RequestParam Long lastSeenMessageId) {
+        chatService.markRoomAsSeen(getCurrentUserId(), roomId, lastSeenMessageId);
+        return ResponseEntity.ok().build();
     }
 
     // ══════════════════════════════════════════════════════════════
-    // [Chat] ĐA PHƯƠNG TIỆN - Upload file (ảnh, PDF, Excel)
+    // ĐA PHƯƠNG TIỆN
     // ══════════════════════════════════════════════════════════════
 
-    // [Chat] Upload file và gửi tin nhắn media vào phòng chat
     @PostMapping("/upload")
-    public ResponseEntity<MessageDTO> uploadFile(@RequestParam Long roomId,
-                                                  @RequestParam Long senderId,
-                                                  @RequestParam MultipartFile file,
-                                                  @RequestParam(defaultValue = "FILE") String messageType) {
-        String fileUrl = fileStorageService.storeFile(file, roomId);
-        String fileName = file.getOriginalFilename();
-        Long fileSize = file.getSize();
-        MessageType type = MessageType.valueOf(messageType);
-        Message msg = chatService.sendMessageAdvanced(
-                roomId, senderId, fileName != null ? fileName : "File",
-                type, null, null, fileUrl, fileName, fileSize
-        );
-        return ResponseEntity.ok(MessageDTO.from(msg));
+    public ResponseEntity<?> uploadFile(@RequestParam Long roomId,
+            @RequestParam MultipartFile file,
+            @RequestParam(defaultValue = "FILE") String messageType) {
+        try {
+            String fileUrl = fileStorageService.storeFile(file, roomId);
+            String fileName = file.getOriginalFilename();
+            Long fileSize = file.getSize();
+            MessageType type = MessageType.valueOf(messageType);
+            Message msg = chatService.sendMessageAdvanced(
+                    roomId, getCurrentUserId(), fileName != null ? fileName : "File",
+                    type, null, null, fileUrl, fileName, fileSize);
+            return ResponseEntity.ok(MessageDTO.from(msg));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("messageType không hợp lệ: " + messageType);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Upload thất bại: " + e.getMessage());
+        }
     }
 
     // ══════════════════════════════════════════════════════════════
-    // [Chat] THU HỒI - REST endpoint
+    // THU HỒI
     // ══════════════════════════════════════════════════════════════
 
-    // [Chat] Thu hồi tin nhắn qua REST
     @PutMapping("/messages/{messageId}/recall")
-    public ResponseEntity<MessageDTO> recallMessage(@PathVariable Long messageId,
-                                                     @RequestParam Long senderId) {
-        Message msg = chatService.recallMessage(senderId, messageId);
+    public ResponseEntity<MessageDTO> recallMessage(@PathVariable Long messageId) {
+        Message msg = chatService.recallMessage(getCurrentUserId(), messageId);
         return ResponseEntity.ok(MessageDTO.from(msg));
     }
 
     // ══════════════════════════════════════════════════════════════
-    // [Chat] REACTION - Thả cảm xúc qua REST
+    // DANH BẠ
     // ══════════════════════════════════════════════════════════════
 
-    // [Chat] Toggle reaction (thêm/xóa cảm xúc) qua REST
-    @PostMapping("/messages/{messageId}/reaction")
-    public ResponseEntity<Void> toggleReaction(@PathVariable Long messageId,
-                                                @RequestParam Long userId,
-                                                @RequestParam String emoji) {
-        chatService.toggleReaction(userId, messageId, emoji);
-        return ResponseEntity.ok().build();
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // [Chat] ĐÃ XEM - Đánh dấu đã đọc
-    // ══════════════════════════════════════════════════════════════
-
-    // [Chat] Đánh dấu đã xem tin nhắn qua REST (backup cho WebSocket)
-    @PostMapping("/messages/{messageId}/seen")
-    public ResponseEntity<Void> markSeen(@PathVariable Long messageId,
-                                          @RequestParam Long userId) {
-        chatService.markAsSeen(userId, messageId);
-        return ResponseEntity.ok().build();
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // [Chat] DANH BẠ THÔNG MINH - Tra cứu đồng nghiệp
-    // ══════════════════════════════════════════════════════════════
-
-    // [Chat] Tìm kiếm đồng nghiệp theo keyword, kỹ năng, chức vụ, trạng thái
     @GetMapping("/contacts")
     public ResponseEntity<List<ContactDTO>> searchContacts(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String skill,
             @RequestParam(required = false) String position,
-            @RequestParam(required = false) String status) {
-        return ResponseEntity.ok(chatService.searchContacts(keyword, skill, position, status));
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long roomId) {
+        return ResponseEntity
+                .ok(chatService.searchContacts(getCurrentUserId(), keyword, skill, position, status, roomId));
     }
 }
-

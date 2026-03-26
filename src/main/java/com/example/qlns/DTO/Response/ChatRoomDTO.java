@@ -2,25 +2,22 @@ package com.example.qlns.DTO.Response;
 
 import com.example.qlns.Entity.ChatRoom;
 
+import java.time.format.DateTimeFormatter;
+
 // [Chat] DTO phòng chat - bao gồm avatarUrl, unreadCount, description, createdBy cho Frontend
 public class ChatRoomDTO {
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private Long id;
     private String name;
     private String type;
     private Long departmentId;
-
-    // [Chat] Người tạo phòng chat
     private Long createdBy;
     private String createdByName;
-
-    // [Chat] Tin nhắn mới nhất (hiển thị preview ở danh sách phòng)
-    private String lastMessage;
+    private String lastMessage; // preview tin nhắn mới nhất
     private String lastMessageTime;
-
-    // [Chat] Badge số tin chưa đọc
-    private long unreadCount;
-
-    // [Chat] Thời gian tạo phòng
+    private long unreadCount; // badge số tin chưa đọc
+    private String otherParticipantName; // dùng cho phòng 1-1
+    private Long otherParticipantId;
     private String createdAt;
 
     public static ChatRoomDTO from(ChatRoom cr) {
@@ -32,7 +29,7 @@ public class ChatRoomDTO {
             dto.createdBy = cr.getCreatedBy().getId();
             dto.createdByName = cr.getCreatedBy().getUsername();
         }
-        dto.createdAt = cr.getCreatedAt() != null ? cr.getCreatedAt().toString() : null;
+        dto.createdAt = cr.getCreatedAt() != null ? cr.getCreatedAt().format(FMT) : null;
         if (cr.getDepartment() != null)
             dto.departmentId = cr.getDepartment().getId();
         return dto;
@@ -90,5 +87,25 @@ public class ChatRoomDTO {
 
     public String getCreatedAt() {
         return createdAt;
+    }
+
+    public String getOtherParticipantName() {
+        return otherParticipantName;
+    }
+
+    public void setOtherParticipantName(String n) {
+        this.otherParticipantName = n;
+    }
+
+    public Long getOtherParticipantId() {
+        return otherParticipantId;
+    }
+
+    public void setOtherParticipantId(Long id) {
+        this.otherParticipantId = id;
+    }
+
+    public void setCreatedByName(String n) {
+        this.createdByName = n;
     }
 }

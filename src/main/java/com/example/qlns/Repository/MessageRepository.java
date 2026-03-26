@@ -7,20 +7,16 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-// [Chat] Repository quản lý tin nhắn
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
-    // [Chat] Lấy tin nhắn theo phòng, sắp xếp theo thời gian
+    // Lấy tin nhắn theo phòng, cũ nhất trước
     List<Message> findByRoomIdOrderByCreatedAtAsc(Long roomId);
 
-
-
-    // [Chat] Đếm tin nhắn chưa đọc (id > lastReadMessageId)
+    // Đếm số tin nhắn sau lastReadMessageId
     long countByRoomIdAndIdGreaterThan(Long roomId, Long lastReadMessageId);
 
-    // [Chat] Tìm kiếm tin nhắn theo keyword trong phòng chat (loại trừ tin đã thu hồi)
+    // Tìm kiếm theo keyword trong phòng, bỏ qua tin đã thu hồi
     @Query("SELECT m FROM Message m WHERE m.room.id = :roomId AND m.isRecalled = false " +
-           "AND LOWER(m.message) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY m.createdAt ASC")
+            "AND LOWER(m.message) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY m.createdAt ASC")
     List<Message> searchMessages(@Param("roomId") Long roomId, @Param("keyword") String keyword);
 }
-

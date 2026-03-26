@@ -1,6 +1,6 @@
 package com.example.qlns.Enum;
 
-// [Chat] Loại phòng chat
+// Loại phòng chat
 public enum ChatRoomType {
     PRIVATE,    // Chat 1-1
     DEPARTMENT, // Chat nhóm phòng ban (tự động đồng bộ HR)

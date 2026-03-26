@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * Authentication Controller
@@ -60,9 +62,9 @@ public class AuthController {
     @GetMapping("/validate")
     public ResponseEntity<String> validateToken() {
         // Get token from Authorization header
-        String authHeader = ((org.springframework.web.context.request.RequestContextHolder.getRequestAttributes() != null)
-            ? ((org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.getRequestAttributes()).getRequest().getHeader("Authorization")
-            : null);
+        String authHeader = (RequestContextHolder.getRequestAttributes() != null)
+            ? ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest().getHeader("Authorization")
+            : null;
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);

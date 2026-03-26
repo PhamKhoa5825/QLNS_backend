@@ -32,28 +32,23 @@ public class Message {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    // [Chat] Đa phương tiện - URL file đã upload (ảnh, file, voice)
     @Column(name = "file_url", length = 500)
     private String fileUrl;
 
-    // [Chat] Đa phương tiện - Tên file gốc
     @Column(name = "file_name", length = 255)
     private String fileName;
 
-    // [Chat] Đa phương tiện - Kích thước file (bytes)
     @Column(name = "file_size")
     private Long fileSize;
 
-    // [Chat] Reply/Trích dẫn - ID tin nhắn đang trả lời
+    // ID tin nhắn đang trả lời
     @Column(name = "reply_to_id")
     private Long replyToId;
 
-    // [Chat] Thu hồi - Tin nhắn đã bị thu hồi hay chưa
-    @Column(name = "is_recalled")
+    @Column(name = "is_recalled", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean isRecalled = false;
 
-
-    // [Chat] Metadata bổ sung dạng JSON (poll data)
+    // Dữ liệu bổ sung dạng JSON (dùng cho poll)
     @Column(columnDefinition = "TEXT")
     private String metadata;
 
@@ -136,7 +131,7 @@ public class Message {
     }
 
     public Boolean getIsRecalled() {
-        return isRecalled;
+        return isRecalled != null ? isRecalled : false;
     }
 
     public void setIsRecalled(Boolean isRecalled) {

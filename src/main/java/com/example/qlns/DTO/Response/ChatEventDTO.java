@@ -4,24 +4,15 @@ package com.example.qlns.DTO.Response;
 // Mỗi event có type để client biết cách xử lý (tin nhắn mới, sửa, xóa, reaction...)
 public class ChatEventDTO {
 
-    // [Chat] Loại sự kiện (NEW_MESSAGE, EDIT, RECALL, PIN, REACTION, TYPING, SEEN...)
-    private String eventType;
-
-    // [Chat] ID phòng chat liên quan
+    private String eventType; // NEW_MESSAGE, RECALL, SEEN...
     private Long roomId;
-
-    // [Chat] Tin nhắn liên quan (null nếu event không liên quan đến message)
     private MessageDTO message;
+    private Object data; // payload tùy theo eventType
+    private Long triggeredBy; // userId gây ra event
 
-    // [Chat] Dữ liệu bổ sung dạng Object (tùy theo eventType)
-    private Object data;
+    public ChatEventDTO() {
+    }
 
-    // [Chat] ID user gây ra event
-    private Long triggeredBy;
-
-    public ChatEventDTO() {}
-
-    // [Chat] Factory method tạo event nhanh
     public static ChatEventDTO of(String eventType, Long roomId, MessageDTO message, Object data, Long triggeredBy) {
         ChatEventDTO dto = new ChatEventDTO();
         dto.eventType = eventType;
@@ -34,18 +25,43 @@ public class ChatEventDTO {
 
     // ── Getters & Setters ──────────────────────────────────────
 
-    public String getEventType() { return eventType; }
-    public void setEventType(String eventType) { this.eventType = eventType; }
+    public String getEventType() {
+        return eventType;
+    }
 
-    public Long getRoomId() { return roomId; }
-    public void setRoomId(Long roomId) { this.roomId = roomId; }
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
+    }
 
-    public MessageDTO getMessage() { return message; }
-    public void setMessage(MessageDTO message) { this.message = message; }
+    public Long getRoomId() {
+        return roomId;
+    }
 
-    public Object getData() { return data; }
-    public void setData(Object data) { this.data = data; }
+    public void setRoomId(Long roomId) {
+        this.roomId = roomId;
+    }
 
-    public Long getTriggeredBy() { return triggeredBy; }
-    public void setTriggeredBy(Long triggeredBy) { this.triggeredBy = triggeredBy; }
+    public MessageDTO getMessage() {
+        return message;
+    }
+
+    public void setMessage(MessageDTO message) {
+        this.message = message;
+    }
+
+    public Object getData() {
+        return data;
+    }
+
+    public void setData(Object data) {
+        this.data = data;
+    }
+
+    public Long getTriggeredBy() {
+        return triggeredBy;
+    }
+
+    public void setTriggeredBy(Long triggeredBy) {
+        this.triggeredBy = triggeredBy;
+    }
 }

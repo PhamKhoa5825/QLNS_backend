@@ -24,7 +24,6 @@ public class ChatRoom {
     private Department department; // Chỉ có khi type = DEPARTMENT
 
 
-    // [Chat] Người tạo phòng chat
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;

@@ -37,9 +37,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     // - /ws: endpoint chính, hỗ trợ SockJS fallback cho browser cũ
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // [Chat] SockJS endpoint cho browser
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
+        // [Chat] Raw WebSocket endpoint cho Android (không SockJS)
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*");
     }
 
     // [Chat] Đăng ký interceptor xác thực JWT trên channel inbound

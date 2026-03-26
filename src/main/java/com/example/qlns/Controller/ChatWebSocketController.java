@@ -1,68 +1,59 @@
 package com.example.qlns.Controller;
 
-import com.example.qlns.DTO.Request.ReactionRequest;
 import com.example.qlns.DTO.Request.SeenRequest;
 import com.example.qlns.DTO.Request.SendMessageRequest;
 import com.example.qlns.Enum.MessageType;
+import com.example.qlns.Repository.UserRepository;
 import com.example.qlns.Service.ChatService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.Map;
 
-// [Chat] WebSocket Controller - Xử lý các STOMP message từ client
-// Endpoint prefix: /app (đã cấu hình trong WebSocketConfig)
-// Tuân thủ MVC: Controller chỉ nhận request và gọi Service
 @Controller
 public class ChatWebSocketController {
 
     private final ChatService chatService;
+    private final UserRepository userRepository;
 
-    public ChatWebSocketController(ChatService chatService) {
+    public ChatWebSocketController(ChatService chatService, UserRepository userRepository) {
         this.chatService = chatService;
+        this.userRepository = userRepository;
     }
 
-    // [Chat] Real-time - Gửi tin nhắn mới qua WebSocket
-    // Client gửi: SEND /app/chat.send {roomId, message, messageType, replyToId,
-    // voiceDuration, metadata}
-    // Server broadcast: /topic/room/{roomId} → ChatEventDTO (NEW_MESSAGE)
+    // Lấy userId từ STOMP Principal (JWT đã xác thực tại WebSocketAuthInterceptor)
+    private Long getUserId(Principal principal) {
+        return userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found")).getId();
+    }
+
+    // SEND /app/chat.send → broadcast /topic/room/{roomId}
     @MessageMapping("/chat.send")
     public void sendMessage(@Payload SendMessageRequest request, Principal principal) {
-        Long senderId = request.getSenderId();
         MessageType type = request.getMessageType() != null
                 ? MessageType.valueOf(request.getMessageType())
                 : MessageType.TEXT;
 
         chatService.sendMessageAdvanced(
-                request.getRoomId(), senderId, request.getMessage(), type,
+                request.getRoomId(), getUserId(principal), request.getMessage(), type,
                 request.getReplyToId(),
                 request.getMetadata(), null, null, null);
     }
 
-    // [Chat] Đã xem - Đánh dấu đã đọc tin nhắn
-    // Client gửi: SEND /app/chat.seen {userId, roomId, lastSeenMessageId}
-    // Server broadcast: /topic/room/{roomId} → ChatEventDTO (SEEN)
+    // SEND /app/chat.seen → broadcast /topic/room/{roomId}
     @MessageMapping("/chat.seen")
     public void markSeen(@Payload SeenRequest request, Principal principal) {
-        chatService.markRoomAsSeen(request.getUserId(), request.getRoomId(), request.getLastSeenMessageId());
+        chatService.markRoomAsSeen(getUserId(principal), request.getRoomId(), request.getLastSeenMessageId());
     }
 
-    // [Chat] Thu hồi - Xóa tin nhắn gửi nhầm ở cả 2 phía
-    // Client gửi: SEND /app/chat.recall {messageId}
-    // Server broadcast: /topic/room/{roomId} → ChatEventDTO (RECALL)
+    // SEND /app/chat.recall → broadcast /topic/room/{roomId}
     @MessageMapping("/chat.recall")
-    public void recallMessage(@Payload java.util.Map<String, Long> payload, Principal principal) {
+    public void recallMessage(@Payload Map<String, Long> payload, Principal principal) {
         Long messageId = payload.get("messageId");
-        Long senderId = payload.get("senderId");
-        chatService.recallMessage(senderId, messageId);
+        chatService.recallMessage(getUserId(principal), messageId);
     }
 
-    // [Chat] Reaction - Thả cảm xúc lên tin nhắn (toggle)
-    // Client gửi: SEND /app/chat.reaction {userId, messageId, emoji}
-    // Server broadcast: /topic/room/{roomId} → ChatEventDTO (REACTION)
-    @MessageMapping("/chat.reaction")
-    public void toggleReaction(@Payload ReactionRequest request, Principal principal) {
-        chatService.toggleReaction(request.getUserId(), request.getMessageId(), request.getEmoji());
-    }
 }
+

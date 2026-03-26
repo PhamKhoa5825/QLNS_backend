@@ -3,7 +3,6 @@ package com.example.qlns.Entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-// [Chat] Đã xem (Seen) - Lưu chi tiết ai đã xem tin nhắn nào và lúc nào
 @Entity
 @Table(name = "message_read_receipts",
        uniqueConstraints = @UniqueConstraint(columnNames = {"message_id", "user_id"}))
@@ -13,17 +12,14 @@ public class MessageReadReceipt {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // [Chat] Tin nhắn được đọc
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_id", nullable = false)
     private Message message;
 
-    // [Chat] Người đã đọc tin nhắn
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // [Chat] Thời gian người dùng xem tin nhắn (VD: "Đã xem lúc 14:30")
     @Column(name = "seen_at", nullable = false)
     private LocalDateTime seenAt;
 

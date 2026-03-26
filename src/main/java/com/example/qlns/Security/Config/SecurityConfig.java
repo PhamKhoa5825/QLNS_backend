@@ -18,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
  * Spring Security Configuration
@@ -29,6 +30,9 @@ public class SecurityConfig {
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
+
+    @Autowired
+    private CorsConfigurationSource corsConfigurationSource;
 
     /**
      * JWT Authentication Filter Bean
@@ -71,6 +75,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
@@ -80,17 +85,21 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll() // [Chat] Cho phép kết nối WebSocket
                         .requestMatchers("/uploads/**").permitAll() // [Chat] Truy cập file media
 
-
                         // 2. Attendance (Chấm công)
-                        // Khớp với AttendanceController: /api/attendance/checkin (POST) và /checkout (PUT)
-                        .requestMatchers(HttpMethod.POST, "/api/attendance/checkin").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/attendance/checkout").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        // Khớp với AttendanceController: /api/attendance/checkin (POST) và /checkout
+                        // (PUT)
+                        .requestMatchers(HttpMethod.POST, "/api/attendance/checkin")
+                        .hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/attendance/checkout")
+                        .hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers("/api/attendance/employee/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers("/api/attendance/today").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
 
                         // 3. Requests (Đơn từ) - Khớp với RequestController
-                        .requestMatchers(HttpMethod.GET, "/api/requests/employee/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/requests/employee/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/requests/employee/**")
+                        .hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/requests/employee/**")
+                        .hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers("/api/requests/department/**").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers("/api/requests/*/review/**").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/requests").hasRole("ADMIN") // Chỉ Admin xem tất cả
@@ -99,8 +108,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/tasks/my/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/tasks/department/**").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/tasks/**").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/tasks/*/accept").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/tasks/*/status").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/tasks/*/accept")
+                        .hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/tasks/*/status")
+                        .hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/tasks/**").hasAnyRole("MANAGER", "ADMIN")
 
                         // 5. Chat & Notifications
@@ -108,17 +119,20 @@ public class SecurityConfig {
                         .requestMatchers("/api/notifications/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
 
                         // 6. Employees & Departments (Quản lý nhân sự/phòng ban)
-                        .requestMatchers(HttpMethod.GET, "/api/employees/{id}/detail").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/employees/{id}/summary")
+                        .hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/employees/{id}/detail")
+                        .hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/employees/**").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/employees/**").hasRole("ADMIN") // Chỉ Admin mới tạo được NV
+                        .requestMatchers(HttpMethod.POST, "/api/employees/**").hasRole("ADMIN") // Chỉ Admin mới tạo
+                                                                                                // được NV
                         .requestMatchers("/api/departments/**").hasAnyRole("MANAGER", "ADMIN")
 
                         // 7. System Settings
                         .requestMatchers("/api/settings/**").hasRole("ADMIN")
 
                         // Tất cả các request khác phải authenticated
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .authenticationProvider(authenticationProvider(customUserDetailsService));
 

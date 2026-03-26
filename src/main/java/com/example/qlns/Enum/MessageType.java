@@ -1,6 +1,6 @@
 package com.example.qlns.Enum;
 
-// [Chat] Loại tin nhắn
+// Loại tin nhắn
 public enum MessageType {
     TEXT,   // Tin nhắn văn bản
     IMAGE,  // Ảnh
