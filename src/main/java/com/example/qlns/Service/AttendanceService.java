@@ -25,9 +25,12 @@ import java.util.List;
 @Service
 public class AttendanceService {
 
-    @Autowired private AttendanceRepository attendanceRepo;
-    @Autowired private EmployeeRepository empRepo;
-    @Autowired private CompanySettingsRepository settingsRepo;
+    @Autowired
+    private AttendanceRepository attendanceRepo;
+    @Autowired
+    private EmployeeRepository empRepo;
+    @Autowired
+    private CompanySettingsRepository settingsRepo;
 
     // ── Haversine: tính khoảng cách (mét) giữa 2 toạ độ ─────
     private double haversine(double lat1, double lng1, double lat2, double lng2) {
@@ -36,7 +39,7 @@ public class AttendanceService {
         double dLng = Math.toRadians(lng2 - lng1);
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+                        * Math.sin(dLng / 2) * Math.sin(dLng / 2);
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
@@ -65,14 +68,14 @@ public class AttendanceService {
                     settings.getAllowedRadius(), distance));
 
         // Tính trạng thái và số phút trễ
-        LocalTime startTime    = LocalTime.parse(settings.getWorkStartTime()); // "08:00"
-        LocalTime nowTime      = LocalTime.now();
-        Integer lateMinutes    = 0;  // ← Thay đổi từ int thành Integer
+        LocalTime startTime = LocalTime.parse(settings.getWorkStartTime()); // "08:00"
+        LocalTime nowTime = LocalTime.now();
+        Integer lateMinutes = 0; // ← Thay đổi từ int thành Integer
         AttendanceStatus status = AttendanceStatus.ON_TIME;
 
         if (nowTime.isAfter(startTime)) {
             lateMinutes = (int) Duration.between(startTime, nowTime).toMinutes();
-            status      = AttendanceStatus.LATE;
+            status = AttendanceStatus.LATE;
         }
 
         Attendance att = new Attendance();
@@ -124,7 +127,7 @@ public class AttendanceService {
 
     public List<Attendance> getByEmployeeAndMonth(Long empId, int month, int year) {
         LocalDate from = LocalDate.of(year, month, 1);
-        LocalDate to   = from.withDayOfMonth(from.lengthOfMonth());
+        LocalDate to = from.withDayOfMonth(from.lengthOfMonth());
         return attendanceRepo.findByEmployeeIdAndDateBetween(empId, from, to);
     }
 
@@ -137,7 +140,7 @@ public class AttendanceService {
      */
     public AttendanceStatsDTO getMonthlyStats(Long empId, int month, int year) {
         List<Attendance> attendances = getByEmployeeAndMonth(empId, month, year);
-        
+
         double totalHours = attendances.stream()
                 .filter(a -> a.getWorkHours() != null)
                 .mapToDouble(a -> (double) a.getWorkHours())
@@ -152,7 +155,7 @@ public class AttendanceService {
                 .count();
 
         double avgHours = attendances.isEmpty() ? 0 : totalHours / attendances.size();
-        
+
         // Làm tròn 2 chữ số thập phân
         totalHours = Math.round(totalHours * 100.0) / 100.0;
         avgHours = Math.round(avgHours * 100.0) / 100.0;

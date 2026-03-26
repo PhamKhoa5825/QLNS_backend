@@ -4,12 +4,11 @@ package com.example.qlns.DTO.Request;
 public class SendMessageRequest {
     private Long roomId;
     private String message;
-    private String messageType; // TEXT / IMAGE / FILE / POLL
+    private String messageType; // TEXT / IMAGE / FILE
 
     // [Chat] Reply - ID tin nhắn đang trả lời (null = không reply)
     private Long replyToId;
 
-    // [Chat] Metadata bổ sung (poll data)
     private String metadata;
 
     public Long getRoomId() { return roomId; }
