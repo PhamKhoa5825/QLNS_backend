@@ -30,4 +30,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     long countByDepartmentIdAndStatus(Long departmentId, EmployeeStatus status);
 
     long countByStatus(EmployeeStatus status);
+
+    long countByDepartmentId(Long departmentId);
 }

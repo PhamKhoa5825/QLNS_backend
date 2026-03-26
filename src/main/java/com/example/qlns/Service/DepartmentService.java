@@ -56,7 +56,11 @@ public class DepartmentService {
     public void delete(Long id) {
         Department dept = getById(id);
         long count = empRepo.countByDepartmentIdAndStatus(id, EmployeeStatus.ACTIVE);
-        if (count > 0) throw new BadRequestException("Phòng ban còn " + count + " nhân viên đang làm việc");
+        if (count > 0) {
+            throw new BadRequestException(
+                    "Không thể xóa phòng \"" + dept.getName() + "\" vì còn " + count + " nhân viên. "
+                            + "Hãy chuyển nhân viên sang phòng ban khác trước.");
+        }
         deptRepo.delete(dept);
     }
 

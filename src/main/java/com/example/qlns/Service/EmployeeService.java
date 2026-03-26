@@ -182,6 +182,10 @@ public class EmployeeService {
     @Transactional
     public Map<String, Object> resignWithCascade(Long id) {
         Employee emp = getById(id);
+
+        if (emp.getStatus() == EmployeeStatus.RESIGNED)
+            throw new BadRequestException("Nhân viên \"" + emp.getFullName() + "\" đã nghỉ việc rồi");
+
         Map<String, Object> result = new HashMap<>();
         result.put("employeeId", emp.getId());
         result.put("employeeName", emp.getFullName());
@@ -237,6 +241,10 @@ public class EmployeeService {
     @Transactional
     public void reactivate(Long id) {
         Employee emp = getById(id);
+
+        if (emp.getStatus() == EmployeeStatus.ACTIVE)
+            throw new BadRequestException("Nhân viên \"" + emp.getFullName() + "\" đang hoạt động, không cần khôi phục");
+
         emp.setStatus(EmployeeStatus.ACTIVE);
         empRepo.save(emp);
         userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
@@ -257,44 +265,73 @@ public class EmployeeService {
     @Transactional
     public EmployeeDTO updateRole(Long employeeId, String newRole) {
         Employee emp = getById(employeeId);
-        Role targetRole;
+
+        // 1. Validate role hợp lệ
+        Role role;
         try {
-            targetRole = Role.valueOf(newRole.toUpperCase());
+            role = Role.valueOf(newRole.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new BadRequestException("Role không hợp lệ: " + newRole);
+            throw new BadRequestException(
+                    "Role không hợp lệ: " + newRole + ". Chỉ chấp nhận: EMPLOYEE, MANAGER, ADMIN");
         }
 
-        // Validate khi đổi sang MANAGER
-        if (targetRole == Role.MANAGER) {
+        User user = userRepo.findByEmail(emp.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy tài khoản của nhân viên: " + emp.getFullName()));
+
+        Role currentRole = user.getRole();
+
+        // 2. Không thay đổi gì
+        if (currentRole == role) {
+            return buildDTO(emp);
+        }
+
+        // 3. Kiểm tra nếu NV đang RESIGNED
+        if (emp.getStatus() == EmployeeStatus.RESIGNED) {
+            throw new BadRequestException(
+                    "Nhân viên \"" + emp.getFullName() + "\" đã nghỉ việc. Hãy khôi phục trước.");
+        }
+
+        // 4. Đổi sang MANAGER → kiểm tra ràng buộc phòng ban
+        if (role == Role.MANAGER) {
             if (emp.getDepartment() == null) {
                 throw new BadRequestException(
-                        "Nhân viên " + emp.getFullName() + " chưa thuộc phòng ban nào. "
-                                + "Vui lòng phân công phòng ban trước khi đổi quyền Manager.");
+                        "Nhân viên \"" + emp.getFullName() + "\" chưa thuộc phòng ban nào. Hãy phân công phòng ban trước");
             }
-            // Check PB đã có Manager khác chưa
+
             Department dept = emp.getDepartment();
-            if (dept.getManager() != null && !dept.getManager().getId().equals(emp.getId())) {
+            if (dept.getManager() != null && !dept.getManager().getId().equals(employeeId)) {
                 throw new BadRequestException(
-                        "Phòng ban " + dept.getName() + " đã có trưởng phòng: "
+                        "Phòng \"" + dept.getName() + "\" đã có trưởng phòng: "
                                 + dept.getManager().getFullName()
-                                + ". Vui lòng gỡ trưởng phòng cũ trước.");
+                                + ". Mỗi PB chỉ 1 Manager");
             }
+
+            // Set manager cho phòng ban
+            dept.setManager(emp);
+            deptRepo.save(dept);
         }
 
-        // Thực hiện đổi role
-        userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
-            u.setRole(targetRole);
-            userRepo.save(u);
-        });
-
-        // Nếu đổi sang MANAGER và PB chưa có Manager -> tự gán luôn
-        if (targetRole == Role.MANAGER && emp.getDepartment() != null) {
-            Department dept = emp.getDepartment();
-            if (dept.getManager() == null) {
-                dept.setManager(emp);
+        // 5. Nếu đang là MANAGER → hạ xuống role khác → gỡ manager khỏi phòng ban
+        if (currentRole == Role.MANAGER && role != Role.MANAGER) {
+            deptRepo.findFirstByManagerId(employeeId).ifPresent(dept -> {
+                dept.setManager(null);
                 deptRepo.save(dept);
+            });
+        }
+
+        // 6. Không cho hạ ADMIN cuối cùng
+        if (currentRole == Role.ADMIN && role != Role.ADMIN) {
+            long adminCount = userRepo.countByRole(Role.ADMIN);
+            if (adminCount <= 1) {
+                throw new BadRequestException(
+                        "Không thể hạ vai trò Admin duy nhất");
             }
         }
+
+        // 7. Lưu
+        user.setRole(role);
+        userRepo.save(user);
 
         return buildDTO(emp);
     }

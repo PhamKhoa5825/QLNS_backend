@@ -8,6 +8,8 @@ import com.example.qlns.Entity.User;
 import com.example.qlns.Enum.UserStatus;
 import com.example.qlns.Exception.DuplicateException;
 import com.example.qlns.Exception.ResourceNotFoundException;
+import com.example.qlns.Exception.BadRequestException;
+import com.example.qlns.Enum.Role;
 import com.example.qlns.Repository.EmployeeRepository;
 import com.example.qlns.Repository.UserRepository;
 import com.example.qlns.Security.JwtService;
@@ -144,13 +146,25 @@ public class AuthService {
     @Transactional
     public void updateAccountStatus(Long userId, String status) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản với ID: " + userId));
+
+        UserStatus newStatus;
         try {
-            user.setStatus(UserStatus.valueOf(status.toUpperCase()));
-            userRepository.save(user);
+            newStatus = UserStatus.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid status: " + status);
+            throw new BadRequestException("Trạng thái không hợp lệ: " + status);
         }
+
+        // Không cho khoá Admin cuối cùng
+        if (user.getRole() == Role.ADMIN && newStatus == UserStatus.INACTIVE) {
+            long adminCount = userRepository.countByRole(Role.ADMIN);
+            if (adminCount <= 1) {
+                throw new BadRequestException("Không thể khoá tài khoản Admin duy nhất trong hệ thống");
+            }
+        }
+
+        user.setStatus(newStatus);
+        userRepository.save(user);
     }
 
     @Transactional

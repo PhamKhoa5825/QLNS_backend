@@ -1,5 +1,5 @@
 -- =============================================
--- QLNS - SEED DATA v4 (SẠCH - không xung đột)
+-- QLNS - SEED DATA v5 (SẠCH - có target_role)
 -- Mật khẩu tất cả: password123
 -- BCrypt: $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
 -- =============================================
@@ -25,18 +25,12 @@ TRUNCATE TABLE departments;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- ── Đảm bảo enum tasks.status đúng v4 ────────────────────────
-ALTER TABLE tasks
-    MODIFY COLUMN status ENUM('PENDING','ACCEPTED','DONE','OVERDUE') NOT NULL DEFAULT 'PENDING';
 
-ALTER TABLE task_updates
-    MODIFY COLUMN status ENUM('PENDING','ACCEPTED','DONE','OVERDUE') NOT NULL;
+-- ── Đảm bảo có target_role ────────────────────────
+-- USE qlns;
+-- ALTER TABLE requests ADD COLUMN target_role ENUM('MANAGER','ADMIN') NOT NULL DEFAULT 'MANAGER';
 
-ALTER TABLE requests ADD COLUMN target_role ENUM('MANAGER','ADMIN') NOT NULL DEFAULT 'MANAGER';
 
--- ── Đảm bảo cột late_minutes tồn tại ─────────────────────────
--- ALTER TABLE attendance
---     ADD COLUMN IF NOT EXISTS late_minutes INT NOT NULL DEFAULT 0;
 
 -- =============================================
 -- 1. COMPANY SETTINGS
@@ -127,7 +121,7 @@ INSERT INTO tasks (id, title, description, assigned_by, assigned_to, priority, s
                                                                                                                                                (6, 'Cập nhật hợp đồng nhân viên', 'Rà soát và cập nhật hợp đồng hết hạn',       5, 6,  'LOW',    'DONE',     NOW()-INTERVAL 2 DAY,  NOW()-INTERVAL 1 DAY, NULL, NOW()-INTERVAL 5 DAY),
                                                                                                                                                (7, 'Đối soát công nợ Q3',         'Kiểm tra và đối soát công nợ quý 3',          1, 7,  'URGENT', 'ACCEPTED', NOW()+INTERVAL 1 DAY,  NULL,                 NULL, NOW()-INTERVAL 1 DAY),
                                                                                                                                                (8, 'Lập kế hoạch kinh doanh Q4',  'Xây dựng kế hoạch và mục tiêu Q4',           1, 8,  'HIGH',   'PENDING',  NOW()+INTERVAL 14 DAY, NULL,                 NULL, NOW()),
--- Task quá hạn (để test scheduler OVERDUE)
+                                                                                                                                               -- Task quá hạn (để test scheduler OVERDUE)
                                                                                                                                                (9, 'Báo cáo Q2 chưa nộp',         'Deadline đã qua, chưa hoàn thành',            1, 7,  'HIGH',   'OVERDUE',  NOW()-INTERVAL 3 DAY,  NULL,                 NULL, NOW()-INTERVAL 10 DAY);
 
 -- =============================================
@@ -143,40 +137,48 @@ INSERT INTO task_updates (task_id, status, note, updated_by, updated_at) VALUES
                                                                              (9, 'OVERDUE',  'Tự động đánh dấu quá hạn bởi hệ thống', 1, NOW()-INTERVAL 3 DAY);
 
 -- =============================================
--- 9. REQUESTS  ← v4: thay thế leave_requests + leave_balance
---    Chỉ INSERT 1 LẦN
+-- 9. REQUESTS  ← v5: có target_role (MANAGER/ADMIN)
 -- =============================================
-INSERT INTO requests (employee_id, title, description, file_url, file_name, status, reviewed_by, rejection_reason, created_at) VALUES
-                                                                                                                                   (3, 'Xin nghỉ phép 2 ngày',
-                                                                                                                                    'Nghỉ phép cá nhân ngày 20-21/3/2026',
-                                                                                                                                    NULL, NULL, 'PENDING', NULL, NULL, NOW()-INTERVAL 1 DAY),
+INSERT INTO requests (employee_id, title, description, file_url, file_name, status, reviewed_by, rejection_reason, target_role, created_at) VALUES
+                                                                                                                                                -- Đơn gửi cho MANAGER (nghiệp vụ phòng ban)
+                                                                                                                                                (3, 'Xin nghỉ phép 2 ngày',
+                                                                                                                                                 'Nghỉ phép cá nhân ngày 20-21/3/2026',
+                                                                                                                                                 NULL, NULL, 'PENDING', NULL, NULL, 'MANAGER', NOW()-INTERVAL 1 DAY),
 
-                                                                                                                                   (6, 'Đơn xin tăng ca cuối tuần',
-                                                                                                                                    'Yêu cầu làm thêm thứ 7 tuần này để hoàn thiện báo cáo',
-                                                                                                                                    NULL, NULL, 'APPROVED', 5, NULL, NOW()-INTERVAL 3 DAY),
+                                                                                                                                                (6, 'Đơn xin tăng ca cuối tuần',
+                                                                                                                                                 'Yêu cầu làm thêm thứ 7 tuần này để hoàn thiện báo cáo',
+                                                                                                                                                 NULL, NULL, 'APPROVED', 5, NULL, 'MANAGER', NOW()-INTERVAL 3 DAY),
 
-                                                                                                                                   (4, 'Xin nghỉ ốm',
-                                                                                                                                    'Bị sốt, có giấy bác sĩ đính kèm',
-                                                                                                                                    'https://storage.example.com/files/giay_bac_si.pdf',
-                                                                                                                                    'giay_bac_si.pdf', 'APPROVED', 2, NULL, NOW()-INTERVAL 5 DAY),
+                                                                                                                                                (4, 'Xin nghỉ ốm',
+                                                                                                                                                 'Bị sốt, có giấy bác sĩ đính kèm',
+                                                                                                                                                 'https://storage.example.com/files/giay_bac_si.pdf',
+                                                                                                                                                 'giay_bac_si.pdf', 'APPROVED', 2, NULL, 'MANAGER', NOW()-INTERVAL 5 DAY),
 
-                                                                                                                                   (7, 'Xin chỉnh lại chấm công',
-                                                                                                                                    'Hôm qua quên check-out do ra ngoài công tác',
-                                                                                                                                    NULL, NULL, 'REJECTED', 1,
-                                                                                                                                    'Cần xác nhận lại với trưởng phòng trực tiếp', NOW()-INTERVAL 2 DAY),
+                                                                                                                                                (3, 'Đơn xin đổi ca làm việc',
+                                                                                                                                                 'Xin đổi ca chiều thứ 4 tuần tới vì có việc gia đình',
+                                                                                                                                                 NULL, NULL, 'PENDING', NULL, NULL, 'MANAGER', NOW()-INTERVAL 4 HOUR),
 
-                                                                                                                                   (8, 'Đăng ký đào tạo tháng 4',
-                                                                                                                                    'Xin tham gia khóa học Sales Pro tháng 4',
-                                                                                                                                    'https://storage.example.com/files/khoa_hoc_sales.pdf',
-                                                                                                                                    'khoa_hoc_sales.pdf', 'PENDING', NULL, NULL, NOW()),
+                                                                                                                                                (9, 'Xin phép về sớm',
+                                                                                                                                                 'Cần về lúc 15h ngày mai để đón con',
+                                                                                                                                                 NULL, NULL, 'APPROVED', 5, NULL, 'MANAGER', NOW()-INTERVAL 6 DAY),
 
-                                                                                                                                   (3, 'Đơn xin đổi ca làm việc',
-                                                                                                                                    'Xin đổi ca chiều thứ 4 tuần tới vì có việc gia đình',
-                                                                                                                                    NULL, NULL, 'PENDING', NULL, NULL, NOW()-INTERVAL 4 HOUR),
+                                                                                                                                                -- Đơn gửi cho ADMIN (yêu cầu cấp công ty)
+                                                                                                                                                (8, 'Đăng ký đào tạo tháng 4',
+                                                                                                                                                 'Xin tham gia khóa học Sales Pro tháng 4, chi phí công ty tài trợ',
+                                                                                                                                                 'https://storage.example.com/files/khoa_hoc_sales.pdf',
+                                                                                                                                                 'khoa_hoc_sales.pdf', 'PENDING', NULL, NULL, 'ADMIN', NOW()),
 
-                                                                                                                                   (9, 'Xin phép về sớm',
-                                                                                                                                    'Cần về lúc 15h ngày mai để đón con',
-                                                                                                                                    NULL, NULL, 'APPROVED', 5, NULL, NOW()-INTERVAL 6 DAY);
+                                                                                                                                                (7, 'Yêu cầu cấp thêm máy tính',
+                                                                                                                                                 'Phòng Kế Toán cần thêm 2 máy tính cho nhân viên mới',
+                                                                                                                                                 NULL, NULL, 'PENDING', NULL, NULL, 'ADMIN', NOW()-INTERVAL 2 DAY),
+
+                                                                                                                                                (2, 'Đề xuất nâng cấp server',
+                                                                                                                                                 'Server hiện tại quá tải, cần nâng cấp RAM và SSD',
+                                                                                                                                                 NULL, NULL, 'APPROVED', 1, NULL, 'ADMIN', NOW()-INTERVAL 4 DAY),
+
+                                                                                                                                                (5, 'Báo cáo tình hình nhân sự Q1',
+                                                                                                                                                 'Tổng hợp báo cáo nhân sự quý 1/2026 gửi Ban Giám Đốc',
+                                                                                                                                                 NULL, NULL, 'PENDING', NULL, NULL, 'ADMIN', NOW()-INTERVAL 1 DAY);
 
 -- =============================================
 -- 10. CHAT ROOMS
@@ -253,24 +255,9 @@ INSERT INTO system_logs (user_id, action, description, created_at) VALUES
                                                                        (3,    'LOGIN',      'Đăng nhập từ 192.168.1.3',                        NOW()-INTERVAL 1 DAY),
                                                                        (1,    'CREATE',     'Tạo nhân viên mới: Phạm Thị Tester',              NOW()-INTERVAL 2 DAY),
                                                                        (2,    'UPDATE',     'Giao task #2 cho Lê Văn Lập Trình',               NOW()-INTERVAL 2 DAY),
-                                                                       (5,    'UPDATE',     'Duyệt đơn của Hoàng Văn Nhân Sự',                 NOW()-INTERVAL 3 DAY),
+                                                                       (5,    'REVIEW',     'Duyệt đơn tăng ca của Hoàng Văn Nhân Sự',        NOW()-INTERVAL 3 DAY),
                                                                        (1,    'LOGIN',      'Đăng nhập từ 192.168.1.1',                        NOW()),
                                                                        (2,    'CREATE',     'Tạo thông báo: Họp phòng CNTT định kỳ',           NOW()-INTERVAL 1 DAY),
-                                                                       (NULL, 'LOGIN_FAIL', 'Đăng nhập thất bại email: hacker@evil.com',       NOW()-INTERVAL 12 HOUR);
-
--- =============================================
--- KIỂM TRA  ← bỏ leave_balance và leave_requests
--- =============================================
--- SELECT 'departments'        AS tabel, COUNT(*) AS rows FROM departments
--- UNION ALL SELECT 'users',             COUNT(*) FROM users
---           UNION ALL SELECT 'employees',         COUNT(*) FROM employees
---           UNION ALL SELECT 'attendance',        COUNT(*) FROM attendance
---           UNION ALL SELECT 'tasks',             COUNT(*) FROM tasks
---           UNION ALL SELECT 'task_updates',      COUNT(*) FROM task_updates
---           UNION ALL SELECT 'requests',          COUNT(*) FROM requests
---           UNION ALL SELECT 'chat_rooms',        COUNT(*) FROM chat_rooms
---           UNION ALL SELECT 'chat_room_members', COUNT(*) FROM chat_room_members
---           UNION ALL SELECT 'messages',          COUNT(*) FROM messages
---           UNION ALL SELECT 'notifications',     COUNT(*) FROM notifications
---           UNION ALL SELECT 'user_notifications',COUNT(*) FROM user_notifications
---           UNION ALL SELECT 'system_logs',       COUNT(*) FROM system_logs;
+                                                                       (NULL, 'LOGIN_FAIL', 'Đăng nhập thất bại email: hacker@evil.com',       NOW()-INTERVAL 12 HOUR),
+                                                                       (1,    'REVIEW',     'Duyệt đơn đề xuất nâng cấp server của Trần Thị Manager', NOW()-INTERVAL 4 DAY),
+                                                                       (1,    'BACKUP',     'Tạo bản sao lưu database',                        NOW()-INTERVAL 1 DAY);
