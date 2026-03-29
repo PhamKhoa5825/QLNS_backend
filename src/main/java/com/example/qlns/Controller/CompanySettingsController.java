@@ -10,19 +10,19 @@ import org.springframework.web.bind.annotation.*;
 // =============================================
 @RestController
 @RequestMapping("/api/settings")
-class CompanySettingsController {
+public class CompanySettingsController {
     private final CompanySettingsService service;
 
     CompanySettingsController(CompanySettingsService service) {
         this.service = service;
     }
 
-    @GetMapping
+    @GetMapping("/company")
     public ResponseEntity<CompanySettings> get() {
         return ResponseEntity.ok(service.get());
     }
 
-    @PutMapping
+    @PutMapping("/company")
     public ResponseEntity<CompanySettings> update(@RequestBody CompanySettings req) {
         return ResponseEntity.ok(service.update(req));
     }

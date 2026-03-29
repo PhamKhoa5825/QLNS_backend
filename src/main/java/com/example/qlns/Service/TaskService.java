@@ -26,6 +26,8 @@ public class TaskService {
     @Autowired private TaskRepository taskRepo;
     @Autowired private TaskUpdateRepository taskUpdateRepo;
     @Autowired private EmployeeRepository empRepo;
+    @Autowired private com.example.qlns.Repository.UserRepository userRepo;
+    @Autowired private NotificationService notificationService;
 
     // ── Admin: Xem tất cả task ─────────────────────────────────
     @Transactional(readOnly = true)
@@ -61,7 +63,13 @@ public class TaskService {
     public TaskDTO create(Task task) {
         // Task mới luôn bắt đầu ở PENDING
         task.setStatus(TaskStatus.PENDING);
-        return TaskDTO.from(taskRepo.save(task));
+        Task savedTask = taskRepo.save(task);
+        
+        // Thông báo cho người nhận (Websocket)
+        sendTaskNotification(savedTask.getAssignedTo(), "Nhiệm vụ mới", 
+                "Bạn được giao nhiệm vụ: " + savedTask.getTitle());
+        
+        return TaskDTO.from(savedTask);
     }
 
     // ── Chỉnh sửa task (Manager/Admin) ───────────────────────
@@ -109,35 +117,64 @@ public class TaskService {
         return TaskDTO.from(taskRepo.save(task));
     }
 
-    // ── Cập nhật trạng thái task ──────────────────────────────
+    // ── Cập nhật trạng thái task (Bao gồm bước Duyệt) ──────────
     @Transactional
     public TaskDTO updateStatus(Long taskId, TaskStatus newStatus, String note, Long updatedById) {
         Task task = taskRepo.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy task"));
 
         TaskStatus current = task.getStatus();
+        
+        // Lấy role của người cập nhật thông qua UserRepository
+        com.example.qlns.Entity.User updaterUser = userRepo.findByEmployeeId(updatedById)
+                .orElse(null);
+        
+        String roleStr = (updaterUser != null && updaterUser.getRole() != null) ? updaterUser.getRole().name() : "";
+        boolean isManager = roleStr.equals("MANAGER") || roleStr.equals("ADMIN");
+        boolean isAssignee = task.getAssignedTo() != null && task.getAssignedTo().getId().equals(updatedById);
 
-        // Kiểm tra quyền: Nhân viên chỉ sửa task của mình, Manager/Admin sửa thoải mái
-        if (!task.getAssignedTo().getId().equals(updatedById)) {
-             if (task.getAssignedBy() != null && !task.getAssignedBy().getId().equals(updatedById)) {
-                  // Cần check Admin role ở đây nếu muốn chặt chẽ hơn, nhưng service này tin cậy input từ Controller
-                  // throw new ForbiddenException("Bạn không có quyền cập nhật trạng thái nhiệm vụ này");
-             }
-        }
-
-        // Không cho sửa task đã hoàn thành
+        // 1. Kiểm tra task đã hoàn thành
         if (current == TaskStatus.DONE)
             throw new BadRequestException("Task đã hoàn thành, không thể thay đổi trạng thái");
 
-        // Không cho nhảy thẳng PENDING → DONE
-        if (current == TaskStatus.PENDING && newStatus == TaskStatus.DONE)
-            throw new BadRequestException("Phải nhận việc trước khi đánh dấu hoàn thành");
+        // 2. Logic cho Nhân viên (Assignee)
+        if (isAssignee && !isManager) {
+            // Nhân viên cố gắng mark DONE -> Chuyển thành UNDER_REVIEW
+            if (newStatus == TaskStatus.DONE) {
+                newStatus = TaskStatus.UNDER_REVIEW;
+            }
+            // Nhân viên chỉ được phép gửi duyệt hoặc nhận lại việc nếu bị từ chối
+            if (newStatus != TaskStatus.UNDER_REVIEW && newStatus != TaskStatus.ACCEPTED) {
+                throw new BadRequestException("Nhân viên chỉ có thể gửi yêu cầu phê duyệt hoặc nhận việc");
+            }
+        }
+
+        // 3. Logic cho Quản lý (Reviewer)
+        if (isManager) {
+            // Quản lý duyệt từ UNDER_REVIEW sang DONE
+            if (current == TaskStatus.UNDER_REVIEW && newStatus == TaskStatus.DONE) {
+                task.setCompletedAt(LocalDateTime.now());
+            }
+        } else if (!isAssignee) {
+             throw new ForbiddenException("Bạn không có quyền cập nhật trạng thái nhiệm vụ này");
+        }
 
         task.setStatus(newStatus);
-        if (newStatus == TaskStatus.DONE)
-            task.setCompletedAt(LocalDateTime.now());
-
         saveHistory(task, newStatus, note, updatedById);
+        
+        // Gửi thông báo dựa trên trạng thái mới
+        if (newStatus == TaskStatus.UNDER_REVIEW) {
+            String empName = task.getAssignedTo() != null ? task.getAssignedTo().getFullName() : "Nhân viên";
+            sendTaskNotification(task.getAssignedBy(), "Yêu cầu duyệt nhiệm vụ", 
+                    empName + " gửi duyệt: " + task.getTitle());
+        } else if (newStatus == TaskStatus.DONE) {
+            sendTaskNotification(task.getAssignedTo(), "Nhiệm vụ hoàn thành", 
+                    "Đã phê duyệt: " + task.getTitle());
+        } else if (newStatus == TaskStatus.REJECTED) {
+            sendTaskNotification(task.getAssignedTo(), "Yêu cầu sửa lại", 
+                    "Yêu cầu sửa lại: " + task.getTitle());
+        }
+
         return TaskDTO.from(taskRepo.save(task));
     }
 
@@ -180,5 +217,12 @@ public class TaskService {
         if (updatedById != null)
             empRepo.findById(updatedById).ifPresent(log::setUpdatedBy);
         taskUpdateRepo.save(log);
+    }
+
+    private void sendTaskNotification(Employee target, String title, String content) {
+        if (target == null) return;
+        userRepo.findByEmployeeId(target.getId()).ifPresent(u -> {
+            notificationService.sendTargetedNotification(null, java.util.List.of(u), title, content);
+        });
     }
 }

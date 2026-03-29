@@ -32,6 +32,8 @@ public class CompanySettingsService {
         if (req.getBaseLng() != null) settings.setBaseLng(req.getBaseLng());
         if (req.getAllowedRadius() != null) settings.setAllowedRadius(req.getAllowedRadius());
         if (req.getWorkStartTime() != null) settings.setWorkStartTime(req.getWorkStartTime());
+        if (req.getMorningEndTime() != null) settings.setMorningEndTime(req.getMorningEndTime());
+        if (req.getAfternoonStartTime() != null) settings.setAfternoonStartTime(req.getAfternoonStartTime());
         if (req.getWorkEndTime() != null) settings.setWorkEndTime(req.getWorkEndTime());
         return repo.save(settings);
     }

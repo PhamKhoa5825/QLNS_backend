@@ -16,7 +16,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     List<Notification> findByDepartmentId(Long departmentId);
 
-    @Query("SELECT n FROM Notification n WHERE n.targetType = 'COMPANY' " +
-            "OR (n.targetType = 'DEPARTMENT' AND n.department.id = :deptId)")
-    List<Notification> findForEmployee(@Param("deptId") Long departmentId);
+    @Query("SELECT n FROM Notification n " +
+            "LEFT JOIN UserNotification un ON un.notification.id = n.id " +
+            "WHERE n.targetType = com.example.qlns.Enum.NotificationTarget.COMPANY " +
+            "OR (n.department.id = :deptId AND n.targetType = com.example.qlns.Enum.NotificationTarget.DEPARTMENT) " +
+            "OR (un.user.id = :userId AND n.targetType = com.example.qlns.Enum.NotificationTarget.SPECIFIC_USERS) " +
+            "ORDER BY n.id DESC")
+    List<Notification> findForUser(@Param("deptId") Long departmentId, @Param("userId") Long userId);
 }

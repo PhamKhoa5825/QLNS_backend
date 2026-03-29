@@ -44,7 +44,7 @@ public class EmployeeService {
     @Transactional(readOnly = true)
     public List<EmployeeDTO> getByDepartment(Long deptId) {
         return empRepo.findByDepartmentIdAndStatus(deptId, EmployeeStatus.ACTIVE).stream()
-                .map(emp -> EmployeeDTO.from(emp, null))
+                .map(emp -> EmployeeDTO.from(emp, getRoleByEmployeeId(emp.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -88,6 +88,17 @@ public class EmployeeService {
         empRepo.save(emp);
         userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
             u.setStatus(UserStatus.INACTIVE);
+            userRepo.save(u);
+        });
+    }
+
+    @Transactional
+    public void reactivate(Long id) {
+        Employee emp = getById(id);
+        emp.setStatus(EmployeeStatus.ACTIVE);
+        empRepo.save(emp);
+        userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
+            u.setStatus(UserStatus.ACTIVE);
             userRepo.save(u);
         });
     }

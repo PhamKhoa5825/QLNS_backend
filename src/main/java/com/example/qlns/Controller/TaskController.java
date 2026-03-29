@@ -33,21 +33,21 @@ public class TaskController {
         this.securityService = securityService;
     }
 
-    // GET /api/tasks — Admin xem tất cả tasks
-    @GetMapping
+    // GET /api/tasks/all — Admin xem tất cả tasks
+    @GetMapping("/all")
     public ResponseEntity<List<TaskDTO>> getAll() {
         return ResponseEntity.ok(taskService.getAll());
     }
 
     // GET /api/tasks/my/{empId}
     @GetMapping("/my/{empId}")
-    public ResponseEntity<List<TaskDTO>> getMyTasks(@PathVariable Long empId) {
+    public ResponseEntity<List<TaskDTO>> getMyTasks(@PathVariable("empId") Long empId) {
         return ResponseEntity.ok(taskService.getMyTasks(empId));
     }
 
     // GET /api/tasks/department/{deptId}
     @GetMapping("/department/{deptId}")
-    public ResponseEntity<List<TaskDTO>> getByDepartment(@PathVariable Long deptId) {
+    public ResponseEntity<List<TaskDTO>> getByDepartment(@PathVariable("deptId") Long deptId) {
         // Manager chỉ xem được task phòng ban mình, Admin xem tất cả
         securityService.validateManagerDepartment(deptId);
         return ResponseEntity.ok(taskService.getByDepartment(deptId));
@@ -55,7 +55,7 @@ public class TaskController {
 
     // GET /api/tasks/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<TaskDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<TaskDTO> getById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(taskService.getById(id));
     }
 
@@ -78,14 +78,14 @@ public class TaskController {
 
     // PUT /api/tasks/{id} — Chỉnh sửa nhiệm vụ (Manager/Admin)
     @PutMapping("/{id}")
-    public ResponseEntity<TaskDTO> update(@PathVariable Long id,
+    public ResponseEntity<TaskDTO> update(@PathVariable("id") Long id,
                                           @RequestBody UpdateTaskRequest req) {
         return ResponseEntity.ok(taskService.updateTask(id, req));
     }
 
     // PUT /api/tasks/{id}/accept
     @PutMapping("/{id}/accept")
-    public ResponseEntity<TaskDTO> acceptTask(@PathVariable Long id,
+    public ResponseEntity<TaskDTO> acceptTask(@PathVariable("id") Long id,
                                               @RequestBody Map<String, Long> body) {
         Long employeeId = body.get("employeeId");
         if (employeeId == null)
@@ -95,23 +95,23 @@ public class TaskController {
 
     // PUT /api/tasks/{id}/status?updatedById=3
     @PutMapping("/{id}/status")
-    public ResponseEntity<TaskDTO> updateStatus(@PathVariable Long id,
+    public ResponseEntity<TaskDTO> updateStatus(@PathVariable("id") Long id,
                                                 @RequestBody UpdateTaskStatusRequest req,
-                                                @RequestParam Long updatedById) {
+                                                @RequestParam("updatedById") Long updatedById) {
         return ResponseEntity.ok(taskService.updateStatus(
                 id, TaskStatus.valueOf(req.getStatus()), req.getNote(), updatedById));
     }
 
     // DELETE /api/tasks/{id}
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         taskService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     // GET /api/tasks/{id}/history
     @GetMapping("/{id}/history")
-    public ResponseEntity<List<TaskUpdate>> getHistory(@PathVariable Long id) {
+    public ResponseEntity<List<TaskUpdate>> getHistory(@PathVariable("id") Long id) {
         return ResponseEntity.ok(taskService.getHistory(id));
     }
 }

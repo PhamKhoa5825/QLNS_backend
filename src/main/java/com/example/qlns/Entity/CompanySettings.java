@@ -23,8 +23,14 @@ public class CompanySettings {
     @Column(name = "work_start_time", nullable = false)
     private String workStartTime = "08:00"; // HH:mm
 
+    @Column(name = "morning_end_time", nullable = false)
+    private String morningEndTime = "12:00"; // Giờ kết thúc ca sáng
+
+    @Column(name = "afternoon_start_time", nullable = false)
+    private String afternoonStartTime = "13:00"; // Giờ bắt đầu ca chiều
+
     @Column(name = "work_end_time", nullable = false)
-    private String workEndTime = "17:30";
+    private String workEndTime = "17:00";
 
     public CompanySettings() {}
 
@@ -39,6 +45,10 @@ public class CompanySettings {
     public void setAllowedRadius(Integer allowedRadius) { this.allowedRadius = allowedRadius; }
     public String getWorkStartTime() { return workStartTime; }
     public void setWorkStartTime(String workStartTime) { this.workStartTime = workStartTime; }
+    public String getMorningEndTime() { return morningEndTime; }
+    public void setMorningEndTime(String morningEndTime) { this.morningEndTime = morningEndTime; }
+    public String getAfternoonStartTime() { return afternoonStartTime; }
+    public void setAfternoonStartTime(String afternoonStartTime) { this.afternoonStartTime = afternoonStartTime; }
     public String getWorkEndTime() { return workEndTime; }
     public void setWorkEndTime(String workEndTime) { this.workEndTime = workEndTime; }
 }

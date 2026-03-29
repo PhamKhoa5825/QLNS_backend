@@ -80,6 +80,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register").hasRole("ADMIN") // Chỉ Admin tạo tài khoản qua register
                         .requestMatchers("/api/auth/change-password").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/api/upload/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
 
                         // 2. Attendance (Chấm công)
                         .requestMatchers(HttpMethod.POST, "/api/attendance/checkin").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
@@ -117,12 +120,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/departments/*/dashboard").hasAnyRole("MANAGER", "ADMIN")
 
                         // 7. Employees & Departments
-                        .requestMatchers(HttpMethod.GET, "/api/employees/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/employees/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/employees/**").hasRole("ADMIN")
-                        .requestMatchers("/api/departments/**").hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/employees", "/api/employees/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/employees", "/api/employees/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/employees", "/api/employees/**").hasRole("ADMIN")
+                        .requestMatchers("/api/departments", "/api/departments/**").hasAnyRole("MANAGER", "ADMIN")
 
-                        // 8. System Settings
+                        // 8. System Logs & Auditing
+                        .requestMatchers("/api/admin/logs/**").hasRole("ADMIN")
+
+                        // 9. System Settings
+                        .requestMatchers(HttpMethod.GET, "/api/settings/**").hasAnyRole("EMPLOYEE", "MANAGER", "ADMIN")
                         .requestMatchers("/api/settings/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()

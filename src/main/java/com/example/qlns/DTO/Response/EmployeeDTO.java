@@ -17,6 +17,8 @@ public class EmployeeDTO {
     private Long departmentId;
     private String departmentName;
     private String role;            // Từ bảng users
+    private Double remainingLeave;
+    private Double baseSalary;
 
     public static EmployeeDTO from(Employee emp, String role) {
         EmployeeDTO dto = new EmployeeDTO();
@@ -32,11 +34,22 @@ public class EmployeeDTO {
         dto.joinDate = emp.getJoinDate() != null ? emp.getJoinDate().toString() : null;
         dto.status = emp.getStatus().name();
         dto.role = role;
+        dto.baseSalary = emp.getBaseSalary();
+        
+        // Tính số ngày phép còn lại
+        double quota = emp.getAnnualLeaveQuota() != null ? emp.getAnnualLeaveQuota() : 12.0;
+        double used = emp.getLeaveDaysUsed() != null ? emp.getLeaveDaysUsed() : 0.0;
+        dto.remainingLeave = quota - used;
+
         if (emp.getDepartment() != null) {
             dto.departmentId = emp.getDepartment().getId();
             dto.departmentName = emp.getDepartment().getName();
         }
         return dto;
+    }
+
+    public Double getRemainingLeave() {
+        return remainingLeave;
     }
 
     public Long getId() {
@@ -93,5 +106,13 @@ public class EmployeeDTO {
 
     public String getRole() {
         return role;
+    }
+
+    public Double getBaseSalary() {
+        return baseSalary;
+    }
+
+    public void setBaseSalary(Double baseSalary) {
+        this.baseSalary = baseSalary;
     }
 }

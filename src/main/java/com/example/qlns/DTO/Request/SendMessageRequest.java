@@ -1,25 +1,28 @@
 package com.example.qlns.DTO.Request;
 
-// TV4
+// [Chat] Request gửi tin nhắn
 public class SendMessageRequest {
     private Long roomId;
-    private Long senderId;
     private String message;
-    private String messageType;     // TEXT/IMAGE/FILE
+    private String messageType; // TEXT / IMAGE / FILE
 
-    public Long getRoomId() {
-        return roomId;
-    }
+    // [Chat] Reply - ID tin nhắn đang trả lời (null = không reply)
+    private Long replyToId;
 
-    public Long getSenderId() {
-        return senderId;
-    }
+    private String metadata;
 
-    public String getMessage() {
-        return message;
-    }
+    public Long getRoomId() { return roomId; }
+    public void setRoomId(Long roomId) { this.roomId = roomId; }
 
-    public String getMessageType() {
-        return messageType;
-    }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+
+    public String getMessageType() { return messageType; }
+    public void setMessageType(String messageType) { this.messageType = messageType; }
+
+    public Long getReplyToId() { return replyToId; }
+    public void setReplyToId(Long replyToId) { this.replyToId = replyToId; }
+
+    public String getMetadata() { return metadata; }
+    public void setMetadata(String metadata) { this.metadata = metadata; }
 }

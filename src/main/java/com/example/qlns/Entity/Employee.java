@@ -52,6 +52,18 @@ public class Employee {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    // ── Payroll Fields ───────────────────────────
+    @Column(name = "base_salary")
+    private Double baseSalary = 0.0;
+
+    @Column(name = "annual_leave_quota")
+    private Double annualLeaveQuota = 12.0;
+
+    @Column(name = "leave_days_used")
+    private Double leaveDaysUsed = 0.0;
+
+    private String skills;
+
     public Employee() {}
 
     public Long getId() { return id; }
@@ -71,6 +83,8 @@ public class Employee {
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
     public String getPosition() { return position; }
     public void setPosition(String position) { this.position = position; }
+    public String getSkills() { return skills; }
+    public void setSkills(String skills) { this.skills = skills; }
     public LocalDate getJoinDate() { return joinDate; }
     public void setJoinDate(LocalDate joinDate) { this.joinDate = joinDate; }
     public EmployeeStatus getStatus() { return status; }
@@ -79,5 +93,12 @@ public class Employee {
     public void setDepartment(Department department) { this.department = department; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    public Double getBaseSalary() { return baseSalary; }
+    public void setBaseSalary(Double baseSalary) { this.baseSalary = baseSalary; }
+    public Double getAnnualLeaveQuota() { return annualLeaveQuota; }
+    public void setAnnualLeaveQuota(Double annualLeaveQuota) { this.annualLeaveQuota = annualLeaveQuota; }
+    public Double getLeaveDaysUsed() { return leaveDaysUsed; }
+    public void setLeaveDaysUsed(Double leaveDaysUsed) { this.leaveDaysUsed = leaveDaysUsed; }
 }
 

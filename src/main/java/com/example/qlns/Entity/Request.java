@@ -1,8 +1,11 @@
 package com.example.qlns.Entity;
 
 import com.example.qlns.Enum.RequestStatus;
+import com.example.qlns.Enum.RequestType;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "requests")
@@ -17,18 +20,23 @@ public class Request {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
-    // Tiêu đề tự do: "Xin nghỉ phép", "Đơn xin tăng ca", v.v.
+    // Tiêu đề tự do
     @Column(nullable = false, length = 255)
     private String title;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "request_type", nullable = false)
+    private RequestType type = RequestType.LEAVE_ANNUAL;
+
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RequestDetail> details = new ArrayList<>();
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    // Link file sau khi upload (nullable nếu không có file)
     @Column(name = "file_url", length = 500)
     private String fileUrl;
 
-    // Tên file gốc để hiển thị UI
     @Column(name = "file_name", length = 255)
     private String fileName;
 
@@ -36,7 +44,6 @@ public class Request {
     @Column(nullable = false)
     private RequestStatus status = RequestStatus.PENDING;
 
-    // Manager/Admin duyệt hoặc từ chối
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewed_by")
     private Employee reviewedBy;
@@ -59,6 +66,10 @@ public class Request {
     public void setEmployee(Employee employee) { this.employee = employee; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+    public RequestType getType() { return type; }
+    public void setType(RequestType type) { this.type = type; }
+    public List<RequestDetail> getDetails() { return details; }
+    public void setDetails(List<RequestDetail> details) { this.details = details; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     public String getFileUrl() { return fileUrl; }

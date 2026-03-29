@@ -46,13 +46,11 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
 
-    // ← Thêm: bắt đúng BadCredentialsException của Spring Security → 401
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<?> handleBadCredentials(BadCredentialsException e) {
         return error(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
 
-    // ← Thêm: bắt các AuthenticationException khác (token hết hạn, sai format...)
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<?> handleAuthentication(AuthenticationException e) {
         return error(HttpStatus.UNAUTHORIZED, e.getMessage());
@@ -71,6 +69,7 @@ public class GlobalExceptionHandler {
     // Bắt tất cả lỗi còn lại → 500
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGeneral(Exception e) {
+        e.printStackTrace(); // Print full stack trace to server console
         return error(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống: " + e.getMessage());
     }
 }

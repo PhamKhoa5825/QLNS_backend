@@ -2,8 +2,11 @@ package com.example.qlns.DTO.Response;
 
 import com.example.qlns.Entity.Request;
 import com.example.qlns.Enum.RequestStatus;
+import com.example.qlns.Enum.RequestType;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 // ── Request DTO (trả về Android) ──────────────────────────────
 public class RequestDTO {
@@ -13,6 +16,8 @@ public class RequestDTO {
     private String employeeName;
     private String departmentName;
     private String title;
+    private RequestType type;
+    private List<RequestDetailDTO> details;
     private String description;
     private String fileUrl;
     private String fileName;
@@ -31,6 +36,7 @@ public class RequestDTO {
         dto.departmentName = r.getEmployee().getDepartment() != null
                 ? r.getEmployee().getDepartment().getName() : null;
         dto.title          = r.getTitle();
+        dto.type           = r.getType();
         dto.description    = r.getDescription();
         dto.fileUrl        = r.getFileUrl();
         dto.fileName       = r.getFileName();
@@ -42,6 +48,11 @@ public class RequestDTO {
         dto.rejectionReason = r.getRejectionReason();
         dto.createdAt      = r.getCreatedAt();
         dto.updatedAt      = r.getUpdatedAt();
+        if (r.getDetails() != null) {
+            dto.details = r.getDetails().stream()
+                    .map(RequestDetailDTO::from)
+                    .collect(Collectors.toList());
+        }
         return dto;
     }
 
@@ -51,6 +62,8 @@ public class RequestDTO {
     public String getEmployeeName() { return employeeName; }
     public String getDepartmentName() { return departmentName; }
     public String getTitle() { return title; }
+    public RequestType getType() { return type; }
+    public List<RequestDetailDTO> getDetails() { return details; }
     public String getDescription() { return description; }
     public String getFileUrl() { return fileUrl; }
     public String getFileName() { return fileName; }

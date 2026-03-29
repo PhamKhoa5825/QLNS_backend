@@ -13,19 +13,11 @@ public class AuthenticationResponse {
     private String username;
     private String email;
     private Role role;
-    private String tokenType = "Bearer";
     private Long departmentId;
     private Long employeeId;
+    private String tokenType = "Bearer";
 
     public AuthenticationResponse() {}
-
-    public AuthenticationResponse(String token, Long userId, String username, String email, Role role) {
-        this.token = token;
-        this.userId = userId;
-        this.username = username;
-        this.email = email;
-        this.role = role;
-    }
 
     public AuthenticationResponse(String token, Long userId, String username, String email, Role role, Long departmentId, Long employeeId) {
         this.token = token;
@@ -77,14 +69,6 @@ public class AuthenticationResponse {
         this.role = role;
     }
 
-    public String getTokenType() {
-        return tokenType;
-    }
-
-    public void setTokenType(String tokenType) {
-        this.tokenType = tokenType;
-    }
-
     public Long getDepartmentId() {
         return departmentId;
     }
@@ -100,5 +84,12 @@ public class AuthenticationResponse {
     public void setEmployeeId(Long employeeId) {
         this.employeeId = employeeId;
     }
-}
 
+    public String getTokenType() {
+        return tokenType;
+    }
+
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
+    }
+}

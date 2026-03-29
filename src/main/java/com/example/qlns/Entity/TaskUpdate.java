@@ -17,6 +17,7 @@ public class TaskUpdate {
     private Task task;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private TaskStatus status;
 
     @Column(columnDefinition = "TEXT")

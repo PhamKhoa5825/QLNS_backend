@@ -11,10 +11,7 @@ import java.util.Optional;
 // =============================================
 public interface UserNotificationRepository extends JpaRepository<UserNotification, Long> {
     List<UserNotification> findByUserId(Long userId);
-
     List<UserNotification> findByUserIdAndIsRead(Long userId, boolean isRead);
-
     Optional<UserNotification> findByUserIdAndNotificationId(Long userId, Long notificationId);
-
     long countByUserIdAndIsRead(Long userId, boolean isRead);
 }

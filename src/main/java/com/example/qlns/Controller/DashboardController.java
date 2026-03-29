@@ -28,7 +28,7 @@ public class DashboardController {
      */
     @GetMapping("/{deptId}/dashboard")
     public ResponseEntity<DepartmentDashboardDTO> getDashboard(
-            @PathVariable Long deptId,
+            @PathVariable("deptId") Long deptId,
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year) {
         

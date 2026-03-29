@@ -39,20 +39,20 @@ public class EmployeeController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EmployeeDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<EmployeeDTO> getById(@PathVariable("id") Long id) {
         Employee emp = empService.getById(id);
         return ResponseEntity.ok(EmployeeDTO.from(emp, empService.getRoleByEmployeeId(id)));
     }
 
     @GetMapping("/department/{deptId}")
-    public ResponseEntity<List<EmployeeDTO>> getByDepartment(@PathVariable Long deptId) {
+    public ResponseEntity<List<EmployeeDTO>> getByDepartment(@PathVariable("deptId") Long deptId) {
         // Manager chỉ xem được NV phòng ban mình, Admin xem tất cả
         securityService.validateManagerDepartment(deptId);
         return ResponseEntity.ok(empService.getByDepartment(deptId));
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<EmployeeDTO>> search(@RequestParam String keyword) {
+    public ResponseEntity<List<EmployeeDTO>> search(@RequestParam("keyword") String keyword) {
         return ResponseEntity.ok(empService.search(keyword).stream()
                 .map(e -> EmployeeDTO.from(e, empService.getRoleByEmployeeId(e.getId())))
                 .collect(Collectors.toList()));
@@ -70,14 +70,20 @@ public class EmployeeController {
         if (req.getGender() != null) emp.setGender(Gender.valueOf(req.getGender()));
 
         Role role = Role.EMPLOYEE; 
-        // Note: Creation usually defaults to EMPLOYEE unless specified. 
-        // Admin app might want to choose, but create() here is simplified.
+        if (req.getRole() != null && securityService.isAdmin()) {
+            try {
+                role = Role.valueOf(req.getRole());
+            } catch (IllegalArgumentException e) {
+                // Default to EMPLOYEE if role is invalid
+            }
+        }
+        
         Employee saved = empService.create(emp, req.getEmail(), req.getPassword(), role);
         return ResponseEntity.ok(EmployeeDTO.from(saved, role.name()));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EmployeeDTO> update(@PathVariable Long id, @RequestBody UpdateEmployeeRequest req) {
+    public ResponseEntity<EmployeeDTO> update(@PathVariable("id") Long id, @RequestBody UpdateEmployeeRequest req) {
         Employee emp = new Employee();
         emp.setFullName(req.getFullName());
         emp.setPhone(req.getPhone());
@@ -89,8 +95,14 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}/resign")
-    public ResponseEntity<Void> resign(@PathVariable Long id) {
+    public ResponseEntity<Void> resign(@PathVariable("id") Long id) {
         empService.resign(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/reactivate")
+    public ResponseEntity<Void> reactivate(@PathVariable("id") Long id) {
+        empService.reactivate(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -98,7 +110,7 @@ public class EmployeeController {
      * API Rút gọn cho trang chủ (Employee App)
      */
     @GetMapping("/{id}/summary")
-    public ResponseEntity<EmployeeSummaryDTO> getSummary(@PathVariable Long id) {
+    public ResponseEntity<EmployeeSummaryDTO> getSummary(@PathVariable("id") Long id) {
         return ResponseEntity.ok(empService.getEmployeeSummary(id));
     }
 
@@ -106,7 +118,20 @@ public class EmployeeController {
      * API Chi tiết cho trang cá nhân (Employee App)
      */
     @GetMapping("/{id}/detail")
-    public ResponseEntity<EmployeeDetailDTO> getDetail(@PathVariable Long id) {
+    public ResponseEntity<EmployeeDetailDTO> getDetail(@PathVariable("id") Long id) {
         return ResponseEntity.ok(empService.getEmployeeDetail(id));
+    }
+
+    @GetMapping("/{id}/salary")
+    public ResponseEntity<Double> getBaseSalary(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(empService.getById(id).getBaseSalary());
+    }
+
+    @PutMapping("/{id}/salary")
+    public ResponseEntity<Void> updateBaseSalary(@PathVariable("id") Long id, @RequestBody java.util.Map<String, Double> payload) {
+        Employee emp = empService.getById(id);
+        emp.setBaseSalary(payload.get("baseSalary"));
+        empService.update(id, emp);
+        return ResponseEntity.ok().build();
     }
 }

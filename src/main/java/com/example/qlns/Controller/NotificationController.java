@@ -31,15 +31,15 @@ class NotificationController {
         this.departmentRepo = departmentRepo;
     }
 
-    // GET /api/notifications (Admin)
-    @GetMapping
+    // GET /api/notifications/all (Admin)
+    @GetMapping("/all")
     public ResponseEntity<List<NotificationDTO>> getAll() {
         return ResponseEntity.ok(notiService.getAll());
     }
 
     @GetMapping("/department/{deptId}")
-    public ResponseEntity<List<NotificationDTO>> getForEmployee(@PathVariable Long deptId,
-                                                                @RequestParam Long userId) {
+    public ResponseEntity<List<NotificationDTO>> getForEmployee(@PathVariable("deptId") Long deptId,
+                                                                @RequestParam("userId") Long userId) {
         return ResponseEntity.ok(notiService.getForEmployee(deptId, userId));
     }
 
@@ -69,13 +69,13 @@ class NotificationController {
     }
 
     @PutMapping("/{id}/read")
-    public ResponseEntity<Void> markAsRead(@PathVariable Long id, @RequestParam Long userId) {
+    public ResponseEntity<Void> markAsRead(@PathVariable("id") Long id, @RequestParam("userId") Long userId) {
         notiService.markAsRead(userId, id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/unread-count")
-    public ResponseEntity<Long> getUnreadCount(@RequestParam Long userId) {
+    public ResponseEntity<Long> getUnreadCount(@RequestParam("userId") Long userId) {
         return ResponseEntity.ok(notiService.countUnread(userId));
     }
 }

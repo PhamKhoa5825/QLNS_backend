@@ -13,6 +13,7 @@ import com.example.qlns.DTO.Response.NotificationDTO;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.List;
 
@@ -22,13 +23,15 @@ public class NotificationService {
     private final UserNotificationRepository userNotiRepo;
     private final UserRepository userRepo;
     private final EmployeeRepository empRepo;
+    private final SimpMessagingTemplate messagingTemplate;
 
     NotificationService(NotificationRepository notiRepo, UserNotificationRepository userNotiRepo,
-                        UserRepository userRepo, EmployeeRepository empRepo) {
+                        UserRepository userRepo, EmployeeRepository empRepo, SimpMessagingTemplate messagingTemplate) {
         this.notiRepo = notiRepo;
         this.userNotiRepo = userNotiRepo;
         this.userRepo = userRepo;
         this.empRepo = empRepo;
+        this.messagingTemplate = messagingTemplate;
     }
 
     // ── Admin: Xem tất cả thông báo ────────────────────────────
@@ -64,9 +67,36 @@ public class NotificationService {
         return saved;
     }
 
+    @Transactional
+    public Notification sendTargetedNotification(User sender, List<User> targets, String title, String content) {
+        Notification noti = new Notification();
+        noti.setTitle(title);
+        noti.setContent(content);
+        noti.setTargetType(NotificationTarget.SPECIFIC_USERS);
+        
+        if (sender != null && sender.getEmployeeId() != null) {
+            empRepo.findById(sender.getEmployeeId()).ifPresent(noti::setCreatedBy);
+        }
+
+        Notification saved = notiRepo.save(noti);
+
+        for (User u : targets) {
+            if (u == null) continue;
+            UserNotification un = new UserNotification();
+            un.setUser(u);
+            un.setNotification(saved);
+            userNotiRepo.save(un);
+            
+            // WebSockets Broadcast
+            NotificationDTO dto = NotificationDTO.from(saved, false);
+            messagingTemplate.convertAndSend("/topic/notifications/" + u.getId(), dto);
+        }
+        return saved;
+    }
+
     @Transactional(readOnly = true)
     public List<NotificationDTO> getForEmployee(Long deptId, Long userId) {
-        return notiRepo.findForEmployee(deptId).stream()
+        return notiRepo.findForUser(deptId, userId).stream()
                 .map(n -> {
                     // Kiểm tra trạng thái đã đọc của user cụ thể
                     boolean isRead = userNotiRepo.findByUserIdAndNotificationId(userId, n.getId())

@@ -1,0 +1,181 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------------< com.example:QLNS >--------------------------
+[INFO] Building QLNS 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ QLNS ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ QLNS ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 141 source files with javac [debug parameters release 17] to target\classes
+[INFO] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Security/JwtService.java: C:\Users\keduy\Desktop\QLNS_ALL_FI\QLNS_backend\src\main\java\com\example\qlns\Security\JwtService.java uses or overrides a deprecated API.
+[INFO] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Security/JwtService.java: Recompile with -Xlint:deprecation for details.
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Controller/EmployeeController.java:[73,16] cannot find symbol
+  symbol:   method getRole()
+  location: variable req of type com.example.qlns.DTO.Request.CreateEmployeeRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Controller/EmployeeController.java:[75,40] cannot find symbol
+  symbol:   method getRole()
+  location: variable req of type com.example.qlns.DTO.Request.CreateEmployeeRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Controller/RequestController.java:[110,22] cannot find symbol
+  symbol:   method setApproved(boolean)
+  location: variable reviewRequest of type com.example.qlns.DTO.Request.ReviewRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Controller/RequestController.java:[112,26] cannot find symbol
+  symbol:   method setRejectionReason(java.lang.String)
+  location: variable reviewRequest of type com.example.qlns.DTO.Request.ReviewRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[57,16] cannot find symbol
+  symbol:   method getType()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[57,61] cannot find symbol
+  symbol:   method getType()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[57,106] cannot find symbol
+  symbol:   method getType()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[58,20] cannot find symbol
+  symbol:   method getDetails()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[60,24] cannot find symbol
+  symbol:   method getType()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[61,70] cannot find symbol
+  symbol:   method getDetails()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[71,46] cannot find symbol
+  symbol:   method getDetails()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[83,31] cannot find symbol
+  symbol:   method getType()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[83,55] cannot find symbol
+  symbol:   method getType()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[86,16] cannot find symbol
+  symbol:   method getDetails()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[86,45] cannot find symbol
+  symbol:   method getDetails()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[89,27] cannot find symbol
+  symbol:   method getDetails()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[96,54] cannot find symbol
+  symbol:   method getDetails()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[115,16] cannot find symbol
+  symbol:   method getDetails()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[116,50] cannot find symbol
+  symbol:   method getDetails()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[148,16] cannot find symbol
+  symbol:   method getType()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[149,26] cannot find symbol
+  symbol:   method getType()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[157,16] cannot find symbol
+  symbol:   method getDetails()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[159,50] cannot find symbol
+  symbol:   method getDetails()
+  location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Controller/UploadController.java:[22,45] method storeFile in class com.example.qlns.Service.FileStorageService cannot be applied to given types;
+  required: org.springframework.web.multipart.MultipartFile,java.lang.Long
+  found:    org.springframework.web.multipart.MultipartFile
+  reason: actual and formal argument lists differ in length
+[INFO] 24 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.224 s
+[INFO] Finished at: 2026-03-23T17:57:23+07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.1:compile (default-compile) on project QLNS: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Controller/EmployeeController.java:[73,16] cannot find symbol
+[ERROR]   symbol:   method getRole()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateEmployeeRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Controller/EmployeeController.java:[75,40] cannot find symbol
+[ERROR]   symbol:   method getRole()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateEmployeeRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Controller/RequestController.java:[110,22] cannot find symbol
+[ERROR]   symbol:   method setApproved(boolean)
+[ERROR]   location: variable reviewRequest of type com.example.qlns.DTO.Request.ReviewRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Controller/RequestController.java:[112,26] cannot find symbol
+[ERROR]   symbol:   method setRejectionReason(java.lang.String)
+[ERROR]   location: variable reviewRequest of type com.example.qlns.DTO.Request.ReviewRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[57,16] cannot find symbol
+[ERROR]   symbol:   method getType()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[57,61] cannot find symbol
+[ERROR]   symbol:   method getType()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[57,106] cannot find symbol
+[ERROR]   symbol:   method getType()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[58,20] cannot find symbol
+[ERROR]   symbol:   method getDetails()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[60,24] cannot find symbol
+[ERROR]   symbol:   method getType()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[61,70] cannot find symbol
+[ERROR]   symbol:   method getDetails()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[71,46] cannot find symbol
+[ERROR]   symbol:   method getDetails()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[83,31] cannot find symbol
+[ERROR]   symbol:   method getType()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[83,55] cannot find symbol
+[ERROR]   symbol:   method getType()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[86,16] cannot find symbol
+[ERROR]   symbol:   method getDetails()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[86,45] cannot find symbol
+[ERROR]   symbol:   method getDetails()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[89,27] cannot find symbol
+[ERROR]   symbol:   method getDetails()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[96,54] cannot find symbol
+[ERROR]   symbol:   method getDetails()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[115,16] cannot find symbol
+[ERROR]   symbol:   method getDetails()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[116,50] cannot find symbol
+[ERROR]   symbol:   method getDetails()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[148,16] cannot find symbol
+[ERROR]   symbol:   method getType()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[149,26] cannot find symbol
+[ERROR]   symbol:   method getType()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[157,16] cannot find symbol
+[ERROR]   symbol:   method getDetails()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Service/RequestService.java:[159,50] cannot find symbol
+[ERROR]   symbol:   method getDetails()
+[ERROR]   location: variable req of type com.example.qlns.DTO.Request.CreateRequestRequest
+[ERROR] /C:/Users/keduy/Desktop/QLNS_ALL_FI/QLNS_backend/src/main/java/com/example/qlns/Controller/UploadController.java:[22,45] method storeFile in class com.example.qlns.Service.FileStorageService cannot be applied to given types;
+[ERROR]   required: org.springframework.web.multipart.MultipartFile,java.lang.Long
+[ERROR]   found:    org.springframework.web.multipart.MultipartFile
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

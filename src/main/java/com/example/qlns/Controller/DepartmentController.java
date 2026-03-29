@@ -30,13 +30,13 @@ class DepartmentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DepartmentDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<DepartmentDTO> getById(@PathVariable("id") Long id) {
         Department d = deptService.getById(id);
         return ResponseEntity.ok(DepartmentDTO.from(d, deptService.countEmployees(id)));
     }
 
     @GetMapping("/{id}/employees")
-    public ResponseEntity<List<EmployeeDTO>> getEmployees(@PathVariable Long id) {
+    public ResponseEntity<List<EmployeeDTO>> getEmployees(@PathVariable("id") Long id) {
         return ResponseEntity.ok(empService.getByDepartment(id));
     }
 
@@ -47,19 +47,19 @@ class DepartmentController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DepartmentDTO> update(@PathVariable Long id, @RequestBody Department req) {
+    public ResponseEntity<DepartmentDTO> update(@PathVariable("id") Long id, @RequestBody Department req) {
         Department updated = deptService.update(id, req);
         return ResponseEntity.ok(DepartmentDTO.from(updated, deptService.countEmployees(id)));
     }
 
     @PutMapping("/{deptId}/manager/{empId}")
-    public ResponseEntity<DepartmentDTO> setManager(@PathVariable Long deptId, @PathVariable Long empId) {
+    public ResponseEntity<DepartmentDTO> setManager(@PathVariable("deptId") Long deptId, @PathVariable("empId") Long empId) {
         Department updated = deptService.setManager(deptId, empId);
         return ResponseEntity.ok(DepartmentDTO.from(updated, deptService.countEmployees(deptId)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         deptService.delete(id);
         return ResponseEntity.noContent().build();
     }

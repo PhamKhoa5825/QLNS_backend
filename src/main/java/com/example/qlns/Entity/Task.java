@@ -32,6 +32,7 @@ public class Task {
     private TaskPriority priority = TaskPriority.MEDIUM;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private TaskStatus status = TaskStatus.PENDING;
 
     private LocalDateTime deadline;
