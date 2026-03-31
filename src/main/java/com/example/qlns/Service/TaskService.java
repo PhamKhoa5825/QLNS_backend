@@ -28,6 +28,7 @@ public class TaskService {
     @Autowired private EmployeeRepository empRepo;
     @Autowired private com.example.qlns.Repository.UserRepository userRepo;
     @Autowired private NotificationService notificationService;
+    @Autowired private SystemLogService logService;
 
     // ── Admin: Xem tất cả task ─────────────────────────────────
     @Transactional(readOnly = true)
@@ -65,9 +66,8 @@ public class TaskService {
         task.setStatus(TaskStatus.PENDING);
         Task savedTask = taskRepo.save(task);
         
-        // Thông báo cho người nhận (Websocket)
-        sendTaskNotification(savedTask.getAssignedTo(), "Nhiệm vụ mới", 
-                "Bạn được giao nhiệm vụ: " + savedTask.getTitle());
+        // Log activity
+        logService.log("CREATE", "Nhiệm vụ mới: " + savedTask.getTitle() + " được giao cho " + savedTask.getStatus());
         
         return TaskDTO.from(savedTask);
     }
@@ -114,6 +114,10 @@ public class TaskService {
 
         task.setStatus(TaskStatus.ACCEPTED);
         saveHistory(task, TaskStatus.ACCEPTED, "Nhân viên đã nhận việc", employeeId);
+        
+        // Log activity
+        logService.log("UPDATE", "Nhân viên nhận nhiệm vụ: " + task.getTitle());
+        
         return TaskDTO.from(taskRepo.save(task));
     }
 
@@ -162,6 +166,9 @@ public class TaskService {
         task.setStatus(newStatus);
         saveHistory(task, newStatus, note, updatedById);
         
+        // Log activity
+        logService.log("UPDATE", "Cập nhật trạng thái nhiệm vụ : " + task.getTitle() + " -> " + newStatus.name());
+
         // Gửi thông báo dựa trên trạng thái mới
         if (newStatus == TaskStatus.UNDER_REVIEW) {
             String empName = task.getAssignedTo() != null ? task.getAssignedTo().getFullName() : "Nhân viên";

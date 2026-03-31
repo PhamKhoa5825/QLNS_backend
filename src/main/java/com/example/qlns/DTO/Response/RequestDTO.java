@@ -21,6 +21,7 @@ public class RequestDTO {
     private String description;
     private String fileUrl;
     private String fileName;
+    private String employeeAvatarUrl; // New field
     private RequestStatus status;
     private Long reviewedById;
     private String reviewedByName;
@@ -40,6 +41,7 @@ public class RequestDTO {
         dto.description    = r.getDescription();
         dto.fileUrl        = r.getFileUrl();
         dto.fileName       = r.getFileName();
+        dto.employeeAvatarUrl = r.getEmployee().getAvatarUrl(); // Set avatar URL from employee
         dto.status         = r.getStatus();
         if (r.getReviewedBy() != null) {
             dto.reviewedById   = r.getReviewedBy().getId();
@@ -71,6 +73,7 @@ public class RequestDTO {
     public Long getReviewedById() { return reviewedById; }
     public String getReviewedByName() { return reviewedByName; }
     public String getRejectionReason() { return rejectionReason; }
+    public String getEmployeeAvatarUrl() { return employeeAvatarUrl; } // Getter for avatar
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

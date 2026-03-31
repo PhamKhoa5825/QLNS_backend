@@ -44,6 +44,7 @@ public class RequestService {
     @Autowired private CompanySettingsRepository settingsRepo;
     @Autowired private NotificationService notificationService;
     @Autowired private UserRepository userRepository;
+    @Autowired private EmployeeService employeeService;
 
     @Transactional(readOnly = true)
     public List<RequestDTO> getMyRequests(Long employeeId, Integer month, Integer year) {
@@ -157,6 +158,13 @@ public class RequestService {
                     // Manager/Admin gửi đơn -> Bắn cho Admin
                     targets.addAll(userRepository.findByRole(Role.ADMIN));
                 }
+
+                // === ĐẶC BIỆT: ĐƠN THÔI VIỆC CHỈ GỬI CHO ADMIN ===
+                if (savedRequest.getType() == RequestType.RESIGNATION) {
+                    targets.clear();
+                    targets.addAll(userRepository.findByRole(Role.ADMIN));
+                }
+
                 if (!targets.isEmpty()) {
                     notificationService.sendTargetedNotification(
                             senderUser,
@@ -360,6 +368,10 @@ public class RequestService {
 
                     attendanceRepo.save(att);
                 }
+            }
+            // Logic cho đơn xin THÔI VIỆC
+            else if (r.getType() == RequestType.RESIGNATION) {
+                employeeService.resign(r.getEmployee().getId());
             }
         } else {
             if (req.getRejectionReason() == null || req.getRejectionReason().isBlank())

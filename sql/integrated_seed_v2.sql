@@ -3,7 +3,7 @@
 -- Clears ALL existing data and sets up a complete test environment
 -- Including HR, Payroll, and Chat functionalities
 -- =============================================
-USE qlnsfinal;
+USE qlnsfinal_vv;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -83,8 +83,8 @@ INSERT INTO departments (id, name, description, manager_id, created_at) VALUES
 -- =============================================
 
 -- Dept 1: Admin
-INSERT INTO employees (id, full_name, email, phone, position, join_date, status, department_id, created_at, base_salary, annual_leave_quota, leave_days_used) 
-VALUES (1, 'Nguyễn Văn Admin', 'admin@company.com', '0901000001', 'Tổng Giám Đốc', '2020-01-01', 'ACTIVE', 1, NOW(), 50000000, 12.0, 0.0);
+INSERT INTO employees (id, full_name, email, phone, position, join_date, status, department_id, created_at, base_salary, annual_leave_quota, leave_days_used, avatar_url)
+VALUES (1, 'Nguyễn Văn Admin', 'admin@company.com', '0901000001', 'Tổng Giám Đốc', '2020-01-01', 'ACTIVE', 1, NOW(), 50000000, 12.0, 0.0, 'http://10.0.123.215:8080/uploads/general/eab5977e-b297-48dc-91c2-56a713314c8b.jpg');
 INSERT INTO users (id, username, email, password_hash, role, status, employee_id, created_at) 
 VALUES (1, 'admin', 'admin@company.com', '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'ADMIN', 'ACTIVE', 1, NOW());
 
@@ -94,8 +94,8 @@ VALUES (2, 'Trần Thị IT', 'manager_it@company.com', '0901000002', 'IT Manage
 INSERT INTO users (id, username, email, password_hash, role, status, employee_id, created_at) 
 VALUES (2, 'manager_it', 'manager_it@company.com', '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'MANAGER', 'ACTIVE', 2, NOW());
 
-INSERT INTO employees (id, full_name, email, phone, position, join_date, status, department_id, created_at, base_salary, annual_leave_quota, leave_days_used) 
-VALUES (3, 'Lê Văn Chính', 'chinh.lv@company.com', '0901000003', 'Software Engineer', '2021-06-01', 'ACTIVE', 2, NOW(), 22000000, 12.0, 0.5);
+INSERT INTO employees (id, full_name, email, phone, position, join_date, status, department_id, created_at, base_salary, annual_leave_quota, leave_days_used, avatar_url)
+VALUES (3, 'Lê Văn Chính', 'chinh.lv@company.com', '0901000003', 'Software Engineer', '2021-06-01', 'ACTIVE', 2, NOW(), 22000000, 12.0, 0.5, 'http://10.0.123.215:8080/uploads/general/0ee5c49f-6611-4ebd-bf82-ff6804e4a648.jpg');
 INSERT INTO users (id, username, email, password_hash, role, status, employee_id, created_at) 
 VALUES (3, 'staff1', 'chinh.lv@company.com', '$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka', 'EMPLOYEE', 'ACTIVE', 3, NOW());
 

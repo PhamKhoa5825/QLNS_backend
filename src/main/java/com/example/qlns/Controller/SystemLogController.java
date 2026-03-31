@@ -1,6 +1,8 @@
 package com.example.qlns.Controller;
 
+import com.example.qlns.Entity.Employee;
 import com.example.qlns.Entity.SystemLog;
+import com.example.qlns.Repository.EmployeeRepository;
 import com.example.qlns.Repository.SystemLogRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,9 +17,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/admin/logs")
 class SystemLogController {
     private final SystemLogRepository logRepo;
+    private final EmployeeRepository employeeRepo;
 
-    SystemLogController(SystemLogRepository logRepo) {
+    SystemLogController(SystemLogRepository logRepo, EmployeeRepository employeeRepo) {
         this.logRepo = logRepo;
+        this.employeeRepo = employeeRepo;
     }
 
     /** Lấy 50 log gần nhất */
@@ -48,7 +52,29 @@ class SystemLogController {
         map.put("action", log.getAction());
         map.put("description", log.getDescription());
         map.put("createdAt", log.getCreatedAt() != null ? log.getCreatedAt().toString() : null);
-        map.put("username", log.getUser() != null ? log.getUser().getUsername() : "System");
+        
+        String username = "System";
+        String department = null;
+        String position = null;
+
+        if (log.getUser() != null) {
+            username = log.getUser().getUsername();
+            Long empId = log.getUser().getEmployeeId();
+            if (empId != null) {
+                Employee emp = employeeRepo.findById(empId).orElse(null);
+                if (emp != null) {
+                    position = emp.getPosition();
+                    if (emp.getDepartment() != null) {
+                        department = emp.getDepartment().getName();
+                    }
+                }
+            }
+        }
+
+        map.put("username", username);
+        map.put("department", department);
+        map.put("position", position);
+        
         return map;
     }
 }

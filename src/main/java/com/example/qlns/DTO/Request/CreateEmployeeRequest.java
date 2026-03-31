@@ -13,6 +13,7 @@ public class CreateEmployeeRequest {
     private String joinDate;
     private Long departmentId;
     private String role;            // Role: ROLE_EMPLOYEE / ROLE_MANAGER / ROLE_ADMIN
+    private String avatarUrl;
 
     public String getFullName() {
         return fullName;
@@ -56,5 +57,9 @@ public class CreateEmployeeRequest {
 
     public String getRole() {
         return role;
+    }
+ 
+    public String getAvatarUrl() {
+        return avatarUrl;
     }
 }

@@ -43,6 +43,9 @@ public class AuthService {
     @Autowired
     private com.example.qlns.Repository.EmployeeRepository empRepo;
 
+    @Autowired
+    private com.example.qlns.Service.SystemLogService logService;
+
     /**
      * Authenticate user and generate JWT token
      */
@@ -68,6 +71,9 @@ public class AuthService {
 
             Long employeeId = user.getEmployeeId();
             Long departmentId = (employeeId != null) ? empRepo.findDepartmentIdByEmployeeId(employeeId) : null;
+
+            // Log activity
+            logService.log(user, "LOGIN", "Người dùng " + user.getUsername() + " đăng nhập vào hệ thống");
 
             // Return authentication response with all required fields for frontend context
             return new AuthenticationResponse(
@@ -196,6 +202,9 @@ public class AuthService {
         // Update password
         user.setPasswordHash(encodedPassword);
         userRepository.save(user);
+
+        // Log activity
+        logService.log(user, "UPDATE", "Người dùng " + username + " đã đổi mật khẩu");
 
         return "Password changed successfully";
     }

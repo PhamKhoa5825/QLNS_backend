@@ -78,6 +78,8 @@ public class EmployeeController {
             }
         }
         
+        if (req.getAvatarUrl() != null) emp.setAvatarUrl(req.getAvatarUrl());
+        
         Employee saved = empService.create(emp, req.getEmail(), req.getPassword(), role);
         return ResponseEntity.ok(EmployeeDTO.from(saved, role.name()));
     }

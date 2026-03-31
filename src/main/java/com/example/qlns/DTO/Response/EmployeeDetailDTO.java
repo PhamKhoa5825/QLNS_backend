@@ -17,6 +17,9 @@ public class EmployeeDetailDTO {
     private String address;
     private String role;
     private LocalDate dateOfBirth;
+    private Double remainingLeave;
+    private Double leaveDaysUsed;
+    private Double annualLeaveQuota;
 
     public EmployeeDetailDTO() {}
 
@@ -65,4 +68,13 @@ public class EmployeeDetailDTO {
 
     public LocalDate getDateOfBirth() { return dateOfBirth; }
     public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+
+    public Double getRemainingLeave() { return remainingLeave; }
+    public void setRemainingLeave(Double remainingLeave) { this.remainingLeave = remainingLeave; }
+
+    public Double getLeaveDaysUsed() { return leaveDaysUsed; }
+    public void setLeaveDaysUsed(Double leaveDaysUsed) { this.leaveDaysUsed = leaveDaysUsed; }
+
+    public Double getAnnualLeaveQuota() { return annualLeaveQuota; }
+    public void setAnnualLeaveQuota(Double annualLeaveQuota) { this.annualLeaveQuota = annualLeaveQuota; }
 }

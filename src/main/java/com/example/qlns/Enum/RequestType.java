@@ -6,5 +6,6 @@ public enum RequestType {
     SICK_LEAVE,     // Nghỉ ốm (BHXH trả)
     OVERTIME,       // Làm thêm giờ
     BUSINESS_TRIP,  // Công tác
-    PUNCH_CORRECTION// Bổ sung công (Quyên chấm công)
+    PUNCH_CORRECTION,// Bổ sung công (Quyên chấm công)
+    RESIGNATION     // Xin thôi việc
 }

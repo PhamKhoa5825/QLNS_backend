@@ -10,8 +10,12 @@ import com.example.qlns.Enum.Role;
 import com.example.qlns.Enum.UserStatus;
 import com.example.qlns.Exception.DuplicateException;
 import com.example.qlns.Exception.ResourceNotFoundException;
+import com.example.qlns.Repository.DepartmentRepository;
 import com.example.qlns.Repository.EmployeeRepository;
+import com.example.qlns.Repository.TaskRepository;
 import com.example.qlns.Repository.UserRepository;
+import com.example.qlns.Entity.Task;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,9 +27,18 @@ public class EmployeeService {
     private final EmployeeRepository empRepo;
     private final UserRepository userRepo;
 
-    EmployeeService(EmployeeRepository empRepo, UserRepository userRepo) {
+    private final TaskRepository taskRepo;
+    private final DepartmentRepository deptRepo;
+    private final PasswordEncoder passwordEncoder;
+    private final SystemLogService logService;
+
+    EmployeeService(EmployeeRepository empRepo, UserRepository userRepo, TaskRepository taskRepo, DepartmentRepository deptRepo, PasswordEncoder passwordEncoder, SystemLogService logService) {
         this.empRepo = empRepo;
         this.userRepo = userRepo;
+        this.taskRepo = taskRepo;
+        this.deptRepo = deptRepo;
+        this.passwordEncoder = passwordEncoder;
+        this.logService = logService;
     }
 
     @Transactional(readOnly = true)
@@ -57,7 +70,8 @@ public class EmployeeService {
         if (userRepo.existsByEmail(email))
             throw new DuplicateException("Email đã được sử dụng: " + email);
         
-        User user = new User(email.split("@")[0], email, password, role);
+        String encodedPassword = passwordEncoder.encode(password);
+        User user = new User(email.split("@")[0], email, encodedPassword, role);
         user = userRepo.save(user);
 
         emp.setEmail(email);
@@ -65,6 +79,9 @@ public class EmployeeService {
 
         user.setEmployeeId(saved.getId());
         userRepo.save(user);
+
+        // Log activity
+        logService.log("CREATE", "Đã tạo nhân viên mới: " + saved.getFullName() + " (" + email + ")");
 
         return saved;
     }
@@ -78,18 +95,70 @@ public class EmployeeService {
         if (req.getPosition() != null) emp.setPosition(req.getPosition());
         if (req.getDepartment() != null) emp.setDepartment(req.getDepartment());
         if (req.getAvatarUrl() != null) emp.setAvatarUrl(req.getAvatarUrl());
-        return empRepo.save(emp);
+        Employee saved = empRepo.save(emp);
+        
+        // Log activity
+        logService.log("UPDATE", "Cập nhật thông tin nhân viên: " + saved.getFullName());
+        
+        return saved;
     }
 
     @Transactional
     public void resign(Long id) {
         Employee emp = getById(id);
+        
+        // 1. Đổi status NV
         emp.setStatus(EmployeeStatus.RESIGNED);
         empRepo.save(emp);
+        
+        // 2. Task PENDING/ACCEPTED -> OVERDUE
+        List<Task> pendingTasks = taskRepo.findByAssignedToIdAndStatus(id, com.example.qlns.Enum.TaskStatus.PENDING);
+        List<Task> acceptedTasks = taskRepo.findByAssignedToIdAndStatus(id, com.example.qlns.Enum.TaskStatus.ACCEPTED);
+        
+        for (com.example.qlns.Entity.Task task : pendingTasks) {
+            task.setStatus(com.example.qlns.Enum.TaskStatus.OVERDUE);
+            taskRepo.save(task);
+        }
+        for (com.example.qlns.Entity.Task task : acceptedTasks) {
+            task.setStatus(com.example.qlns.Enum.TaskStatus.OVERDUE);
+            taskRepo.save(task);
+        }
+
+        // 3. Gỡ Manager khỏi PB
+        deptRepo.findByManagerId(id).ifPresent(dept -> {
+            dept.setManager(null);
+            deptRepo.save(dept);
+        });
+
+        // 4. Khóa tài khoản
         userRepo.findByEmail(emp.getEmail()).ifPresent(u -> {
             u.setStatus(UserStatus.INACTIVE);
             userRepo.save(u);
         });
+
+        // Log activity
+        logService.log("DELETE", "Nhân viên " + emp.getFullName() + " nghỉ việc (Đã khóa tài khoản)");
+    }
+
+    /**
+     * Kiểm tra ảnh hưởng trước khi nghỉ việc
+     */
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> checkResignImpact(Long id) {
+        Employee emp = getById(id);
+        java.util.Map<String, Object> impact = new java.util.HashMap<>();
+        impact.put("employeeId", emp.getId());
+        impact.put("employeeName", emp.getFullName());
+
+        long pendingTasks = taskRepo.countByAssignedToIdAndStatus(id, com.example.qlns.Enum.TaskStatus.PENDING);
+        long acceptedTasks = taskRepo.countByAssignedToIdAndStatus(id, com.example.qlns.Enum.TaskStatus.ACCEPTED);
+        impact.put("pendingTasks", pendingTasks);
+        impact.put("acceptedTasks", acceptedTasks);
+
+        boolean isManager = deptRepo.findByManagerId(id).isPresent();
+        impact.put("isManager", isManager);
+
+        return impact;
     }
 
     @Transactional
@@ -101,6 +170,9 @@ public class EmployeeService {
             u.setStatus(UserStatus.ACTIVE);
             userRepo.save(u);
         });
+
+        // Log activity
+        logService.log("UPDATE", "Kích hoạt lại nhân viên: " + emp.getFullName());
     }
 
     public String getRoleByEmployeeId(Long empId) {
@@ -130,7 +202,7 @@ public class EmployeeService {
                 .map(u -> u.getRole().name())
                 .orElse("EMPLOYEE");
 
-        return new EmployeeDetailDTO(
+        EmployeeDetailDTO dto = new EmployeeDetailDTO(
                 emp.getId(),
                 emp.getFullName(),
                 emp.getAvatarUrl(),
@@ -142,5 +214,13 @@ public class EmployeeService {
                 role,
                 emp.getDateOfBirth()
         );
+        
+        Double quota = emp.getAnnualLeaveQuota() != null ? emp.getAnnualLeaveQuota() : 12.0;
+        Double used = emp.getLeaveDaysUsed() != null ? emp.getLeaveDaysUsed() : 0.0;
+        dto.setAnnualLeaveQuota(quota);
+        dto.setLeaveDaysUsed(used);
+        dto.setRemainingLeave(quota - used);
+        
+        return dto;
     }
 }

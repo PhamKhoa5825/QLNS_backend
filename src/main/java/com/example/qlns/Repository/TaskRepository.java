@@ -40,4 +40,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     long countByDepartmentAndStatus(@Param("deptId") Long departmentId, @Param("status") TaskStatus status);
 
     List<Task> findByAssignedToIdAndDeadlineBetween(Long employeeId, LocalDateTime from, LocalDateTime to);
+
+    long countByStatus(TaskStatus status);
 }

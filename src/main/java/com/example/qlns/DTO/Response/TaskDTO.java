@@ -16,6 +16,7 @@ public class TaskDTO {
     private String assignedByName;
     private Long assignedToId;
     private String assignedToName;
+    private String assignedToAvatarUrl;
     private String createdAt;
 
     public static TaskDTO from(Task t) {
@@ -36,6 +37,7 @@ public class TaskDTO {
         if (t.getAssignedTo() != null) {
             dto.assignedToId   = t.getAssignedTo().getId();
             dto.assignedToName = t.getAssignedTo().getFullName();
+            dto.assignedToAvatarUrl = t.getAssignedTo().getAvatarUrl();
         }
         return dto;
     }
@@ -52,5 +54,6 @@ public class TaskDTO {
     public String getAssignedByName(){ return assignedByName; }
     public Long getAssignedToId()   { return assignedToId; }
     public String getAssignedToName(){ return assignedToName; }
+    public String getAssignedToAvatarUrl(){ return assignedToAvatarUrl; }
     public String getCreatedAt()    { return createdAt; }
 }

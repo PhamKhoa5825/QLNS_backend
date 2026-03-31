@@ -383,22 +383,25 @@ public class PayrollService {
         return count;
     }
 
-    private double[] calculatePerformance(Long empId, int month, int year, double daysWorked, double excusedAbsent, int lateMins, int workingDaysStd) {
+    private double[] calculatePerformance(Long empId, int month, int year, double daysWorked, double unexcused, int lateMins, int workingDaysStd) {
         double score = 100.0;
-        // Rules: Late mins > 30 = -5, Unexcused absent = -10 (not explicitly in score logic but factored)
-        // Simplified attendance score
-        double totalWorkedPossibleSoFar = daysWorked + excusedAbsent;
-        double attendanceRate = workingDaysStd > 0 ? totalWorkedPossibleSoFar / workingDaysStd : 1.0;
-        score = 100.0 * attendanceRate;
-        
-        if (lateMins > 60) score -= 10;
+
+        // 1. Penalty for Unexcused Absences (Heavy: 20 points per day)
+        // This ensures 1 day unexcused (80 pts) disqualifies from both 95 and 85 bonus tiers.
+        score -= (unexcused * 20.0);
+
+        // 2. Penalty for Tardiness
+        if (lateMins > 120) score -= 20;
+        else if (lateMins > 60) score -= 10;
         else if (lateMins > 30) score -= 5;
 
-        double bonus = 0;
-        if (score >= 95) bonus = 500000;
-        else if (score >= 85) bonus = 200000;
+        score = Math.max(0, Math.min(100.0, score));
 
-        return new double[]{Math.max(0, score), bonus};
+        double bonus = 0;
+        if (score >= 95) bonus = 500000;      // Top tier
+        else if (score >= 85) bonus = 200000; // Second tier
+
+        return new double[]{score, bonus};
     }
 
     private String resolveGrade(double score) {

@@ -329,11 +329,11 @@ public class AttendanceService {
             double dayValueDouble = 0.0; // Default to 0, will be set based on status
 
             String status = daySummary.getStatus();
-            if ("PRESENT".equals(status)) {
+            if ("PRESENT".equals(status) || "PRESENT_PARTIAL".equals(status)) {
                 impact = dailyWage;
                 isPaid = true;
                 dayValueDouble = 1.0;
-            } else if ("LATE".equals(status)) {
+            } else if ("LATE".equals(status) || "LATE_PARTIAL".equals(status)) {
                 int mins = att != null && att.getLateMinutes() != null ? att.getLateMinutes() : 0;
                 double deduction = 0;
                 if (mins >= 15 && mins <= 60)
@@ -345,16 +345,10 @@ public class AttendanceService {
                 totalDeductions += deduction;
                 isPaid = true;
                 dayValueDouble = 1.0; 
-            } else if ("HOLIDAY".equals(status) || "LEAVE_ANNUAL".equals(status)) {
+            } else if ("HOLIDAY".equals(status) || "LEAVE_ANNUAL".equals(status) || "LEAVE_ANNUAL_PARTIAL".equals(status)) {
                 impact = dailyWage;
                 isPaid = true;
                 dayValueDouble = 1.0;
-            } else if ("LEAVE_ANNUAL_PARTIAL".equals(status)) {
-                // Paid half day leave + current work impact
-                double workPart = (att != null ? dailyWage * 0.5 : 0.0);
-                impact = (dailyWage * 0.5) + workPart; 
-                isPaid = true;
-                dayValueDouble = 0.5 + (att != null ? 0.5 : 0.0);
             } else if ("LEAVE_UNPAID".equals(status) || "SICK_LEAVE".equals(status)) {
                 impact = 0;
                 isPaid = false;
@@ -504,8 +498,12 @@ public class AttendanceService {
                             (leaveReq.getType() == com.example.qlns.Enum.RequestType.SICK_LEAVE ? "#00BCD4" : "#FDD835");
                             
                     if (att != null) {
+                        status = (att.getStatus() == AttendanceStatus.LATE ? "LATE_PARTIAL" : "PRESENT_PARTIAL");
                         String workStatus = (att.getStatus() == AttendanceStatus.LATE ? "Trễ " + att.getLateMinutes() + "p" : "Đúng giờ");
                         description += " + Đi làm (" + workStatus + ")";
+                    } else {
+                        status = (leaveReq.getType() == com.example.qlns.Enum.RequestType.LEAVE_ANNUAL) ? "LEAVE_ANNUAL_PARTIAL" : 
+                                 (leaveReq.getType() == com.example.qlns.Enum.RequestType.SICK_LEAVE ? "SICK_LEAVE_PARTIAL" : "LEAVE_UNPAID_PARTIAL");
                     }
                 }
             } else {

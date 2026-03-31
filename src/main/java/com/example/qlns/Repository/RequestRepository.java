@@ -36,6 +36,7 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     @Query("SELECT r FROM Request r JOIN User u ON r.employee.id = u.employeeId " +
            "WHERE r.employee.department.id = :deptId AND r.status = 'PENDING' AND u.role = 'EMPLOYEE' " +
+           "AND r.type != com.example.qlns.Enum.RequestType.RESIGNATION " + // Thêm dòng này để giấu đơn thôi việc khỏi Quản lý
            "AND (:empId IS NULL OR r.employee.id = :empId) " +
            "AND (:month IS NULL OR EXISTS (SELECT rd FROM r.details rd WHERE FUNCTION('MONTH', rd.specificDate) = :month)) " +
            "AND (:year IS NULL OR EXISTS (SELECT rd FROM r.details rd WHERE FUNCTION('YEAR', rd.specificDate) = :year)) " +
@@ -78,4 +79,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
             @Param("year") Integer year,
             @Param("deptId") Long deptId,
             @Param("empId") Long empId);
+
+    long countByStatus(RequestStatus status);
 }
