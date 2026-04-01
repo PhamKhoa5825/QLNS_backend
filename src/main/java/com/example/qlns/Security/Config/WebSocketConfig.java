@@ -23,14 +23,20 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     // [Chat] Cấu hình message broker
-    // - /app: prefix cho các message từ client gửi lên server (@MessageMapping)
     // - /topic: prefix cho broadcast tới nhiều subscriber (phòng chat)
     // - /user: prefix cho message riêng tới 1 user (bot, notification)
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic", "/user");
+        config.enableSimpleBroker("/topic", "/user")
+                .setHeartbeatValue(new long[]{10000, 10000}) // 10s ping/pong
+                .setTaskScheduler(heartbeatScheduler());
         config.setApplicationDestinationPrefixes("/app");
         config.setUserDestinationPrefix("/user");
+    }
+
+    @org.springframework.context.annotation.Bean
+    public org.springframework.scheduling.TaskScheduler heartbeatScheduler() {
+        return new org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler();
     }
 
     // [Chat] Đăng ký STOMP endpoint cho client kết nối WebSocket
