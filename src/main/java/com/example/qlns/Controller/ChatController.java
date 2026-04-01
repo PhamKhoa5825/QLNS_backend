@@ -160,7 +160,7 @@ public class ChatController {
             @RequestParam MultipartFile file,
             @RequestParam(defaultValue = "FILE") String messageType) {
         try {
-            String fileUrl = fileStorageService.storeFile(file, roomId);
+            String fileUrl = "/uploads/" + fileStorageService.storeFile(file, roomId);
             String fileName = file.getOriginalFilename();
             Long fileSize = file.getSize();
             MessageType type = MessageType.valueOf(messageType);

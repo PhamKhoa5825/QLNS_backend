@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.40, for Win64 (x86_64)
 --
--- Host: localhost    Database: qlnsfinal_new
+-- Host: localhost    Database: qlnsfinal_vv
 -- ------------------------------------------------------
 -- Server version	8.0.40
 
@@ -37,7 +37,7 @@ CREATE TABLE `attendance` (
   PRIMARY KEY (`id`),
   KEY `FKb48lmkou5j4rvde9sr88bqgjw` (`employee_id`),
   CONSTRAINT `FKb48lmkou5j4rvde9sr88bqgjw` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -46,7 +46,7 @@ CREATE TABLE `attendance` (
 
 LOCK TABLES `attendance` WRITE;
 /*!40000 ALTER TABLE `attendance` DISABLE KEYS */;
-INSERT INTO `attendance` VALUES (1,'2026-03-02 08:00:00.000000','2026-03-02 17:00:00.000000',NULL,'2026-03-02',0,NULL,NULL,'ON_TIME',8,3),(2,'2026-03-03 13:00:00.000000','2026-03-03 17:00:00.000000',NULL,'2026-03-03',0,NULL,NULL,'ON_TIME',4,3),(3,'2026-03-04 08:15:00.000000','2026-03-04 17:00:00.000000',NULL,'2026-03-04',15,NULL,NULL,'LATE',7.75,3),(4,'2026-03-05 08:00:00.000000','2026-03-05 17:00:00.000000',NULL,'2026-03-05',0,NULL,NULL,'ON_TIME',8,3);
+INSERT INTO `attendance` VALUES (1,'2026-03-02 08:00:00.000000','2026-03-02 17:00:00.000000',NULL,'2026-03-02',0,NULL,NULL,'ON_TIME',8,3),(2,'2026-03-03 13:00:00.000000','2026-03-03 17:00:00.000000',NULL,'2026-03-03',0,NULL,NULL,'ON_TIME',4,3),(3,'2026-03-04 08:15:00.000000','2026-03-04 17:00:00.000000',NULL,'2026-03-04',15,NULL,NULL,'LATE',7.75,3),(4,'2026-03-05 08:00:00.000000','2026-03-05 17:00:00.000000',NULL,'2026-03-05',0,NULL,NULL,'ON_TIME',8,3),(5,'2026-04-01 10:05:17.803893',NULL,'2026-04-01 10:05:17.803892','2026-04-01',125,10.8856875,106.7808633,'LATE',NULL,1),(6,'2026-04-01 13:14:25.179700',NULL,'2026-04-01 13:14:25.181724','2026-04-01',314,10.8510652,106.7722833,'LATE',NULL,2);
 /*!40000 ALTER TABLE `attendance` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -69,7 +69,7 @@ CREATE TABLE `chat_room_members` (
   KEY `FKbemsjj4g0iny4xpkvj5rwj6ab` (`user_id`),
   CONSTRAINT `FKbemsjj4g0iny4xpkvj5rwj6ab` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   CONSTRAINT `FKdvub8k7sypahkamqjaiokb44t` FOREIGN KEY (`room_id`) REFERENCES `chat_rooms` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -78,7 +78,7 @@ CREATE TABLE `chat_room_members` (
 
 LOCK TABLES `chat_room_members` WRITE;
 /*!40000 ALTER TABLE `chat_room_members` DISABLE KEYS */;
-INSERT INTO `chat_room_members` VALUES (1,'2026-03-29 23:11:27.000000',NULL,'ADMIN',1,1),(2,'2026-03-29 23:11:27.000000',NULL,'ADMIN',2,2),(3,'2026-03-29 23:11:27.000000',9,'MEMBER',2,3),(4,'2026-03-29 23:11:27.000000',NULL,'MEMBER',2,4),(5,'2026-03-29 23:11:27.000000',NULL,'ADMIN',3,5),(6,'2026-03-29 23:11:27.000000',NULL,'ADMIN',4,2),(7,'2026-03-29 23:11:27.000000',5,'MEMBER',4,3),(8,'2026-03-29 23:11:27.000000',NULL,'MEMBER',4,5),(9,'2026-03-29 23:11:27.000000',7,'MEMBER',5,1),(10,'2026-03-29 23:11:27.000000',7,'MEMBER',5,3),(11,'2026-03-29 23:11:27.000000',NULL,'MEMBER',6,2),(12,'2026-03-29 23:11:27.000000',NULL,'MEMBER',6,5),(13,'2026-03-30 07:24:55.820765',NULL,'MEMBER',7,6),(14,'2026-03-30 07:24:55.833281',NULL,'MEMBER',8,7),(15,'2026-03-30 20:40:05.602417',NULL,'MEMBER',9,2),(16,'2026-03-30 20:40:05.604960',NULL,'MEMBER',9,7),(17,'2026-03-30 20:40:12.623406',NULL,'MEMBER',10,2),(18,'2026-03-30 20:40:12.625922',NULL,'MEMBER',10,3),(19,'2026-03-30 20:40:37.707131',NULL,'MEMBER',11,3),(20,'2026-03-30 20:40:37.709671',NULL,'MEMBER',11,5);
+INSERT INTO `chat_room_members` VALUES (1,'2026-04-01 10:04:29.000000',NULL,'ADMIN',1,1),(2,'2026-04-01 10:04:29.000000',NULL,'ADMIN',2,2),(3,'2026-04-01 10:04:29.000000',NULL,'MEMBER',2,3),(4,'2026-04-01 10:04:29.000000',NULL,'MEMBER',2,4),(5,'2026-04-01 10:04:29.000000',NULL,'ADMIN',3,5),(6,'2026-04-01 10:04:29.000000',NULL,'ADMIN',4,2),(7,'2026-04-01 10:04:29.000000',NULL,'MEMBER',4,3),(8,'2026-04-01 10:04:29.000000',NULL,'MEMBER',4,5),(9,'2026-04-01 10:04:29.000000',11,'MEMBER',5,1),(10,'2026-04-01 10:04:29.000000',11,'MEMBER',5,3),(11,'2026-04-01 10:04:29.000000',NULL,'MEMBER',6,2),(12,'2026-04-01 10:04:29.000000',NULL,'MEMBER',6,5),(13,'2026-04-01 10:24:53.928619',NULL,'MEMBER',7,6),(14,'2026-04-01 10:24:53.954686',NULL,'MEMBER',8,7);
 /*!40000 ALTER TABLE `chat_room_members` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -101,7 +101,7 @@ CREATE TABLE `chat_rooms` (
   KEY `FK7l8mapy1li8plf9mc2e4k87pg` (`department_id`),
   CONSTRAINT `FK7l8mapy1li8plf9mc2e4k87pg` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`),
   CONSTRAINT `FKin9277aywbjursj2b4e3bmw3s` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -110,7 +110,7 @@ CREATE TABLE `chat_rooms` (
 
 LOCK TABLES `chat_rooms` WRITE;
 /*!40000 ALTER TABLE `chat_rooms` DISABLE KEYS */;
-INSERT INTO `chat_rooms` VALUES (1,'2026-03-29 23:11:27.000000','Ban Giám Đốc','DEPARTMENT',NULL,1),(2,'2026-03-29 23:11:27.000000','Công Nghệ Thông Tin','DEPARTMENT',NULL,2),(3,'2026-03-29 23:11:27.000000','Nhân Sự','DEPARTMENT',NULL,3),(4,'2026-03-29 23:11:27.000000','Dự án Hiện đại hóa QLNS','GROUP',2,NULL),(5,'2026-03-29 23:11:27.000000',NULL,'PRIVATE',1,NULL),(6,'2026-03-29 23:11:27.000000',NULL,'PRIVATE',2,NULL),(7,'2026-03-30 07:24:55.735694','Kinh Doanh','DEPARTMENT',NULL,4),(8,'2026-03-30 07:24:55.825105','Marketing','DEPARTMENT',NULL,5),(9,'2026-03-30 20:40:05.572522',NULL,'PRIVATE',2,NULL),(10,'2026-03-30 20:40:12.622406',NULL,'PRIVATE',2,NULL),(11,'2026-03-30 20:40:37.705113',NULL,'PRIVATE',3,NULL);
+INSERT INTO `chat_rooms` VALUES (1,'2026-04-01 10:04:29.000000','Ban Giám Đốc','DEPARTMENT',NULL,1),(2,'2026-04-01 10:04:29.000000','Công Nghệ Thông Tin','DEPARTMENT',NULL,2),(3,'2026-04-01 10:04:29.000000','Nhân Sự','DEPARTMENT',NULL,3),(4,'2026-04-01 10:04:29.000000','Dự án Hiện đại hóa QLNS','GROUP',2,NULL),(5,'2026-04-01 10:04:29.000000',NULL,'PRIVATE',1,NULL),(6,'2026-04-01 10:04:29.000000',NULL,'PRIVATE',2,NULL),(7,'2026-04-01 10:24:53.846842','Kinh Doanh','DEPARTMENT',NULL,4),(8,'2026-04-01 10:24:53.936526','Marketing','DEPARTMENT',NULL,5);
 /*!40000 ALTER TABLE `chat_rooms` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -141,7 +141,7 @@ CREATE TABLE `company_settings` (
 
 LOCK TABLES `company_settings` WRITE;
 /*!40000 ALTER TABLE `company_settings` DISABLE KEYS */;
-INSERT INTO `company_settings` VALUES (1,'13:00',1000,10.7769,106.7009,'Công ty TNHH QLNS Solution','12:00','17:00','08:00');
+INSERT INTO `company_settings` VALUES (1,'13:00',1000,10.813078,106.731007,'Công ty TNHH QLNS Solution','12:00','17:00','08:00');
 /*!40000 ALTER TABLE `company_settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -171,7 +171,7 @@ CREATE TABLE `departments` (
 
 LOCK TABLES `departments` WRITE;
 /*!40000 ALTER TABLE `departments` DISABLE KEYS */;
-INSERT INTO `departments` VALUES (1,'2026-03-29 23:11:27.000000','Lãnh đạo công ty','Ban Giám Đốc',NULL),(2,'2026-03-29 23:11:27.000000','Phòng kỹ thuật & Phát triển phần mềm','Công Nghệ Thông Tin',2),(3,'2026-03-29 23:11:27.000000','Quản lý con người & Tuyển dụng','Nhân Sự',5),(4,'2026-03-29 23:11:27.000000','Kinh doanh & Chăm sóc khách hàng','Kinh Doanh',NULL),(5,'2026-03-29 23:11:27.000000','Truyền thông & Thương mại điện tử','Marketing',NULL);
+INSERT INTO `departments` VALUES (1,'2026-04-01 10:04:29.000000','Lãnh đạo công ty','Ban Giám Đốc',NULL),(2,'2026-04-01 10:04:29.000000','Phòng kỹ thuật & Phát triển phần mềm','Công Nghệ Thông Tin',2),(3,'2026-04-01 10:04:29.000000','Quản lý con người & Tuyển dụng','Nhân Sự',5),(4,'2026-04-01 10:04:29.000000','Kinh doanh & Chăm sóc khách hàng','Kinh Doanh',NULL),(5,'2026-04-01 10:04:29.000000','Truyền thông & Thương mại điện tử','Marketing',NULL);
 /*!40000 ALTER TABLE `departments` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -214,7 +214,7 @@ CREATE TABLE `employees` (
 
 LOCK TABLES `employees` WRITE;
 /*!40000 ALTER TABLE `employees` DISABLE KEYS */;
-INSERT INTO `employees` VALUES (1,NULL,12,NULL,50000000,'2026-03-29 23:11:27.000000',NULL,'admin@company.com','Nguyễn Văn Admin',NULL,'2020-01-01',0,'0901000001','Tổng Giám Đốc',NULL,'ACTIVE',NULL,1),(2,NULL,12,NULL,35000000,'2026-03-29 23:11:27.000000',NULL,'manager_it@company.com','Trần Thị IT',NULL,'2020-03-01',0,'0901000002','IT Manager',NULL,'ACTIVE',NULL,2),(3,NULL,12,NULL,22000000,'2026-03-29 23:11:27.000000',NULL,'chinh.lv@company.com','Lê Văn Chính',NULL,'2021-06-01',0.5,'0901000003','Software Engineer',NULL,'ACTIVE',NULL,2),(4,NULL,12,NULL,18000000,'2026-03-29 23:11:27.000000',NULL,'minh.fe@company.com','Phạm Minh Frontend',NULL,'2022-01-15',0,'0901000004','Frontend Dev',NULL,'ACTIVE',NULL,2),(5,NULL,15,NULL,28000000,'2026-03-29 23:11:27.000000',NULL,'manager_hr@company.com','Hoàng Thị HR',NULL,'2020-05-20',2,'0901000005','HR Manager',NULL,'ACTIVE',NULL,3),(6,NULL,12,NULL,12000000,'2026-03-29 23:11:27.000000',NULL,'sales1@company.com','Bùi Văn Sales',NULL,'2023-01-01',0,'0901000006','Sales Executive',NULL,'ACTIVE',NULL,4),(7,NULL,12,NULL,15000000,'2026-03-29 23:11:27.000000',NULL,'marketing1@company.com','Trương Mỹ Marketing',NULL,'2022-11-01',0,'0901000007','MKT Specialist',NULL,'ACTIVE',NULL,5);
+INSERT INTO `employees` VALUES (1,NULL,12,'http://10.0.121.217:8080/uploads/general/eab5977e-b297-48dc-91c2-56a713314c8b.jpg',50000000,'2026-04-01 10:04:29.000000',NULL,'admin@company.com','Nguyễn Văn Admin',NULL,'2020-01-01',0,'0901000001','Tổng Giám Đốc',NULL,'ACTIVE',NULL,1),(2,NULL,12,NULL,35000000,'2026-04-01 10:04:29.000000',NULL,'manager_it@company.com','Trần Thị IT',NULL,'2020-03-01',0,'0901000002','IT Manager',NULL,'ACTIVE',NULL,2),(3,NULL,12,'http://10.0.121.217:8080/uploads/general/0ee5c49f-6611-4ebd-bf82-ff6804e4a648.jpg',22000000,'2026-04-01 10:04:29.000000',NULL,'chinh.lv@company.com','Lê Văn Chính',NULL,'2021-06-01',0.5,'0901000003','Software Engineer',NULL,'ACTIVE',NULL,2),(4,NULL,12,NULL,18000000,'2026-04-01 10:04:29.000000',NULL,'minh.fe@company.com','Phạm Minh Frontend',NULL,'2022-01-15',0,'0901000004','Frontend Dev',NULL,'ACTIVE',NULL,2),(5,NULL,15,NULL,28000000,'2026-04-01 10:04:29.000000',NULL,'manager_hr@company.com','Hoàng Thị HR',NULL,'2020-05-20',2,'0901000005','HR Manager',NULL,'ACTIVE',NULL,3),(6,NULL,12,NULL,12000000,'2026-04-01 10:04:29.000000',NULL,'sales1@company.com','Bùi Văn Sales',NULL,'2023-01-01',0,'0901000006','Sales Executive',NULL,'ACTIVE',NULL,4),(7,NULL,12,NULL,15000000,'2026-04-01 10:04:29.000000',NULL,'marketing1@company.com','Trương Mỹ Marketing',NULL,'2022-11-01',0,'0901000007','MKT Specialist',NULL,'ACTIVE',NULL,5);
 /*!40000 ALTER TABLE `employees` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -299,7 +299,7 @@ CREATE TABLE `messages` (
   KEY `FK4ui4nnwntodh6wjvck53dbk9m` (`sender_id`),
   CONSTRAINT `FK4ui4nnwntodh6wjvck53dbk9m` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`),
   CONSTRAINT `FKj9tydtks7eq8dy1jq67yv5icx` FOREIGN KEY (`room_id`) REFERENCES `chat_rooms` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -308,7 +308,7 @@ CREATE TABLE `messages` (
 
 LOCK TABLES `messages` WRITE;
 /*!40000 ALTER TABLE `messages` DISABLE KEYS */;
-INSERT INTO `messages` VALUES (1,'2026-03-20 09:00:00.000000',NULL,NULL,NULL,0,'Chào mừng team IT đến với hệ thống chat mới','TEXT',NULL,NULL,2,2),(2,'2026-03-20 09:05:00.000000',NULL,NULL,NULL,0,'Giao diện mượt quá anh!','TEXT',NULL,NULL,2,3),(3,'2026-03-20 10:00:00.000000',NULL,NULL,NULL,0,'Em đã triển khai được phần file đính kèm.','TEXT',NULL,NULL,2,4),(4,'2026-03-29 23:11:27.000000',NULL,NULL,NULL,0,'Bắt đầu dự án thôi mọi người ơi','TEXT',NULL,NULL,4,2),(5,'2026-03-29 23:11:27.000000',NULL,NULL,NULL,0,'System: Trần Thị IT đã tạo nhóm','SYSTEM',NULL,NULL,4,2),(6,'2026-03-29 23:11:27.000000',NULL,NULL,NULL,0,'Chính ơi, báo cáo Payroll đã xong chưa?','TEXT',NULL,NULL,5,1),(7,'2026-03-29 23:11:27.000000',NULL,NULL,NULL,0,'Dạ em vừa nộp trong Task ạ. Admin check giúp em!','TEXT',NULL,NULL,5,3),(8,'2026-03-29 23:11:27.000000','huong_dan.pdf',1024560,'uploads/guide.pdf',0,'Tài liệu hướng dẫn','FILE',NULL,NULL,2,3),(9,'2026-03-29 23:11:27.000000',NULL,NULL,NULL,0,'Tuyệt quá Chính, anh sẽ review sớm.','TEXT',NULL,8,2,2);
+INSERT INTO `messages` VALUES (1,'2026-03-20 09:00:00.000000',NULL,NULL,NULL,0,'Chào mừng team IT đến với hệ thống chat mới','TEXT',NULL,NULL,2,2),(2,'2026-03-20 09:05:00.000000',NULL,NULL,NULL,0,'Giao diện mượt quá anh!','TEXT',NULL,NULL,2,3),(3,'2026-03-20 10:00:00.000000',NULL,NULL,NULL,0,'Em đã triển khai được phần file đính kèm.','TEXT',NULL,NULL,2,4),(4,'2026-04-01 10:04:29.000000',NULL,NULL,NULL,0,'Bắt đầu dự án thôi mọi người ơi','TEXT',NULL,NULL,4,2),(5,'2026-04-01 10:04:29.000000',NULL,NULL,NULL,0,'System: Trần Thị IT đã tạo nhóm','SYSTEM',NULL,NULL,4,2),(6,'2026-04-01 10:04:29.000000',NULL,NULL,NULL,0,'Chính ơi, báo cáo Payroll đã xong chưa?','TEXT',NULL,NULL,5,1),(7,'2026-04-01 10:04:29.000000',NULL,NULL,NULL,0,'Dạ em vừa nộp trong Task ạ. Admin check giúp em!','TEXT',NULL,NULL,5,3),(8,'2026-04-01 10:04:29.000000','huong_dan.pdf',1024560,'uploads/guide.pdf',0,'Tài liệu hướng dẫn','FILE',NULL,NULL,2,3),(9,'2026-04-01 10:04:29.000000',NULL,NULL,NULL,0,'Tuyệt quá Chính, anh sẽ review sớm.','TEXT',NULL,8,2,2),(10,'2026-04-01 10:25:35.291502','1000060434.jpg',114910,'/uploads/room_5/bd95a3a9-5e25-43e3-8356-547ff322538a.jpg',0,'1000060434.jpg','IMAGE',NULL,NULL,5,1),(11,'2026-04-01 10:26:17.485270','9871.jpg',419789,'/uploads/room_5/b36e9205-d385-42db-88b2-6d7b32366618.jpg',0,'9871.jpg','FILE',NULL,NULL,5,3);
 /*!40000 ALTER TABLE `messages` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -332,7 +332,7 @@ CREATE TABLE `notifications` (
   KEY `FK2o79q2wo75bo7fttqlvl9htg0` (`department_id`),
   CONSTRAINT `FK2o79q2wo75bo7fttqlvl9htg0` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`),
   CONSTRAINT `FK4wiak917aduwhnyumllo26oh4` FOREIGN KEY (`created_by`) REFERENCES `employees` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -341,7 +341,7 @@ CREATE TABLE `notifications` (
 
 LOCK TABLES `notifications` WRITE;
 /*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
-INSERT INTO `notifications` VALUES (1,'Vui lòng kiểm tra chi tiết trong phiếu lương','2026-03-29 23:11:27.000000','COMPANY','Lương tháng 2 đã được duyệt',NULL,NULL),(2,'Hôm nay bạn chưa ra về? Đừng quên checkout','2026-03-29 23:11:27.000000','COMPANY','Nhắc nhở chấm công',NULL,NULL),(3,'Bạn được giao nhiệm vụ: t','2026-03-30 07:30:31.964896','SPECIFIC_USERS','Nhiệm vụ mới',NULL,NULL);
+INSERT INTO `notifications` VALUES (1,'Vui lòng kiểm tra chi tiết trong phiếu lương','2026-04-01 10:04:29.000000','COMPANY','Lương tháng 2 đã được duyệt',NULL,NULL),(2,'Hôm nay bạn chưa ra về? Đừng quên checkout','2026-04-01 10:04:29.000000','COMPANY','Nhắc nhở chấm công',NULL,NULL);
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -410,7 +410,7 @@ CREATE TABLE `requests` (
 
 LOCK TABLES `requests` WRITE;
 /*!40000 ALTER TABLE `requests` DISABLE KEYS */;
-INSERT INTO `requests` VALUES (1,'2026-03-01 09:00:00.000000','Khám răng định kỳ',NULL,NULL,NULL,'APPROVED','Nghỉ phép buổi sáng','LEAVE_ANNUAL',NULL,3,2),(2,'2026-03-05 16:30:00.000000','OT sửa lỗi bảo mật ứng dụng',NULL,NULL,NULL,'APPROVED','Làm thêm giờ fix bug','OVERTIME',NULL,3,2),(3,'2026-03-01 11:00:00.000000','Gặp gỡ khách hàng ký hợp đồng',NULL,NULL,NULL,'APPROVED','Đi gặp đối tác HN','BUSINESS_TRIP',NULL,3,2),(4,'2026-03-09 07:00:00.000000','Có giấy nghỉ của bệnh viện','giay_vien.jpg','uploads/medical_cert.jpg',NULL,'APPROVED','Nghỉ ốm sốt cao','SICK_LEAVE',NULL,3,2),(5,'2026-03-29 23:11:27.000000','Hỗ trợ team Sales demo app',NULL,NULL,NULL,'CANCELLED','OT hỗ trợ triển khai','OVERTIME','2026-03-30 08:08:26.898900',3,NULL);
+INSERT INTO `requests` VALUES (1,'2026-03-01 09:00:00.000000','Khám răng định kỳ',NULL,NULL,NULL,'APPROVED','Nghỉ phép buổi sáng','LEAVE_ANNUAL',NULL,3,2),(2,'2026-03-05 16:30:00.000000','OT sửa lỗi bảo mật ứng dụng',NULL,NULL,NULL,'APPROVED','Làm thêm giờ fix bug','OVERTIME',NULL,3,2),(3,'2026-03-01 11:00:00.000000','Gặp gỡ khách hàng ký hợp đồng',NULL,NULL,NULL,'APPROVED','Đi gặp đối tác HN','BUSINESS_TRIP',NULL,3,2),(4,'2026-03-09 07:00:00.000000','Có giấy nghỉ của bệnh viện','giay_vien.jpg','uploads/medical_cert.jpg',NULL,'APPROVED','Nghỉ ốm sốt cao','SICK_LEAVE',NULL,3,2),(5,'2026-04-01 10:04:29.000000','Hỗ trợ team Sales demo app',NULL,NULL,NULL,'PENDING','OT hỗ trợ triển khai','OVERTIME',NULL,3,NULL);
 /*!40000 ALTER TABLE `requests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -478,7 +478,7 @@ CREATE TABLE `system_logs` (
   PRIMARY KEY (`id`),
   KEY `FK3duy1vdqrob9rjxy67079ja4w` (`user_id`),
   CONSTRAINT `FK3duy1vdqrob9rjxy67079ja4w` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -487,7 +487,7 @@ CREATE TABLE `system_logs` (
 
 LOCK TABLES `system_logs` WRITE;
 /*!40000 ALTER TABLE `system_logs` DISABLE KEYS */;
-INSERT INTO `system_logs` VALUES (1,'INSERT_EMPLOYEE','2026-03-29 23:11:27.000000','Thêm nhân viên Marketing mới (ID: 7)',1);
+INSERT INTO `system_logs` VALUES (1,'INSERT_EMPLOYEE','2026-04-01 10:04:29.000000','Thêm nhân viên Marketing mới (ID: 7)',1),(2,'UPDATE','2026-04-01 10:04:51.010374','Đã cập nhật cấu hình hệ thống (Tọa độ/Bán kính/Giờ làm việc)',NULL),(3,'UPDATE','2026-04-01 10:05:07.912062','Đã cập nhật cấu hình hệ thống (Tọa độ/Bán kính/Giờ làm việc)',NULL),(4,'CREATE','2026-04-01 10:05:17.808277','Nhân viên Nguyễn Văn Admin đã chấm công vào lúc 10:05',1),(5,'LOGIN','2026-04-01 10:26:06.853386','Người dùng staff1 đăng nhập vào hệ thống',3),(6,'LOGIN','2026-04-01 13:11:16.748923','Người dùng admin đăng nhập vào hệ thống',1),(7,'UPDATE','2026-04-01 13:11:47.564179','Đã cập nhật cấu hình hệ thống (Tọa độ/Bán kính/Giờ làm việc)',NULL),(8,'LOGIN','2026-04-01 13:13:36.008801','Người dùng manager_it đăng nhập vào hệ thống',2),(9,'CREATE','2026-04-01 13:14:25.184013','Nhân viên Trần Thị IT đã chấm công vào lúc 13:14',2),(10,'LOGIN','2026-04-01 13:14:51.064291','Người dùng admin đăng nhập vào hệ thống',1),(11,'UPDATE','2026-04-01 13:15:06.870465','Người dùng admin đã đổi mật khẩu',1),(12,'LOGIN','2026-04-01 13:15:14.439792','Người dùng admin đăng nhập vào hệ thống',1),(13,'UPDATE','2026-04-01 13:15:43.978627','Đã cập nhật cấu hình hệ thống (Tọa độ/Bán kính/Giờ làm việc)',NULL),(14,'BACKUP','2026-04-01 13:15:49.184725','Hệ thống đã tạo bản sao lưu dữ liệu: backup_2026-04-01_13-15-49.sql',1),(15,'DELETE','2026-04-01 13:16:03.402924','Hệ thống đã xóa bản sao lưu dữ liệu: backup_2026-03-30_21-45-08.sql',1),(16,'DELETE','2026-04-01 13:16:04.385126','Hệ thống đã xóa bản sao lưu dữ liệu: backup_2026-04-01_08-56-31.sql',1),(17,'DELETE','2026-04-01 13:16:05.312425','Hệ thống đã xóa bản sao lưu dữ liệu: backup_2026-04-01_09-19-14.sql',1),(18,'DELETE','2026-04-01 13:16:06.633265','Hệ thống đã xóa bản sao lưu dữ liệu: backup_2026-04-01_09-29-13.sql',1),(19,'DELETE','2026-04-01 13:16:07.860963','Hệ thống đã xóa bản sao lưu dữ liệu: backup_2026-04-01_13-15-49.sql',1);
 /*!40000 ALTER TABLE `system_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -519,7 +519,7 @@ CREATE TABLE `task_updates` (
 
 LOCK TABLES `task_updates` WRITE;
 /*!40000 ALTER TABLE `task_updates` DISABLE KEYS */;
-INSERT INTO `task_updates` VALUES (1,'Đã hoàn thành cấu hình WebSocket và DB Schema','ACCEPTED','2026-03-29 23:11:27.000000',2,3);
+INSERT INTO `task_updates` VALUES (1,'Đã hoàn thành cấu hình WebSocket và DB Schema','ACCEPTED','2026-04-01 10:04:29.000000',2,3);
 /*!40000 ALTER TABLE `task_updates` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -548,7 +548,7 @@ CREATE TABLE `tasks` (
   KEY `FKc2y22d6enhsanvjek24wis1ly` (`assigned_to`),
   CONSTRAINT `FK7f9tqquuh8w1006pl6pog4fq0` FOREIGN KEY (`assigned_by`) REFERENCES `employees` (`id`),
   CONSTRAINT `FKc2y22d6enhsanvjek24wis1ly` FOREIGN KEY (`assigned_to`) REFERENCES `employees` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -557,7 +557,7 @@ CREATE TABLE `tasks` (
 
 LOCK TABLES `tasks` WRITE;
 /*!40000 ALTER TABLE `tasks` DISABLE KEYS */;
-INSERT INTO `tasks` VALUES (1,NULL,'2026-03-04 15:00:00.000000','2026-03-01 08:00:00.000000','2026-03-05 17:00:00.000000',NULL,'HIGH','DONE','Hoàn thành báo cáo lương tháng 2',NULL,5,2),(2,NULL,NULL,'2026-03-29 23:11:27.000000','2026-03-31 17:00:00.000000',NULL,'HIGH','ACCEPTED','Phát triển module Chat',NULL,2,3),(3,NULL,NULL,'2026-03-30 07:30:31.956710','2026-03-31 00:00:00.000000','t','MEDIUM','PENDING','t','2026-03-30 07:30:31.956710',2,3);
+INSERT INTO `tasks` VALUES (1,NULL,'2026-03-04 15:00:00.000000','2026-03-01 08:00:00.000000','2026-03-05 17:00:00.000000',NULL,'HIGH','DONE','Hoàn thành báo cáo lương tháng 2',NULL,5,2),(2,NULL,NULL,'2026-04-01 10:04:29.000000','2026-03-31 17:00:00.000000',NULL,'HIGH','ACCEPTED','Phát triển module Chat',NULL,2,3);
 /*!40000 ALTER TABLE `tasks` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -579,7 +579,7 @@ CREATE TABLE `user_notifications` (
   KEY `FK9f86wonnl11hos1cuf5fibutl` (`user_id`),
   CONSTRAINT `FK9f86wonnl11hos1cuf5fibutl` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   CONSTRAINT `FKovvx0ab3h8s9lrm6fppuadn7d` FOREIGN KEY (`notification_id`) REFERENCES `notifications` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -588,7 +588,7 @@ CREATE TABLE `user_notifications` (
 
 LOCK TABLES `user_notifications` WRITE;
 /*!40000 ALTER TABLE `user_notifications` DISABLE KEYS */;
-INSERT INTO `user_notifications` VALUES (1,_binary '','2026-03-30 09:58:43.853284',1,3),(2,_binary '','2026-03-30 09:58:43.348845',2,3),(3,_binary '','2026-03-30 09:58:42.885123',3,3);
+INSERT INTO `user_notifications` VALUES (1,_binary '\0',NULL,1,3),(2,_binary '\0',NULL,2,3);
 /*!40000 ALTER TABLE `user_notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -620,7 +620,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'2026-03-29 23:11:27.000000','admin@company.com',1,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','ADMIN','ACTIVE','admin'),(2,'2026-03-29 23:11:27.000000','manager_it@company.com',2,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','MANAGER','ACTIVE','manager_it'),(3,'2026-03-29 23:11:27.000000','chinh.lv@company.com',3,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','EMPLOYEE','ACTIVE','staff1'),(4,'2026-03-29 23:11:27.000000','minh.fe@company.com',4,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','EMPLOYEE','ACTIVE','minh_fe'),(5,'2026-03-29 23:11:27.000000','manager_hr@company.com',5,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','MANAGER','ACTIVE','manager_hr'),(6,'2026-03-29 23:11:27.000000','sales1@company.com',6,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','EMPLOYEE','ACTIVE','sales1'),(7,'2026-03-29 23:11:27.000000','marketing1@company.com',7,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','EMPLOYEE','ACTIVE','mkt1');
+INSERT INTO `users` VALUES (1,'2026-04-01 10:04:29.000000','admin@company.com',1,'$2a$10$xQ0qWSdr6J2xACnLvjFlveboPVJICCP8mO0HH.faWGXhGLdJaTtqK','ADMIN','ACTIVE','admin'),(2,'2026-04-01 10:04:29.000000','manager_it@company.com',2,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','MANAGER','ACTIVE','manager_it'),(3,'2026-04-01 10:04:29.000000','chinh.lv@company.com',3,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','EMPLOYEE','ACTIVE','staff1'),(4,'2026-04-01 10:04:29.000000','minh.fe@company.com',4,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','EMPLOYEE','ACTIVE','minh_fe'),(5,'2026-04-01 10:04:29.000000','manager_hr@company.com',5,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','MANAGER','ACTIVE','manager_hr'),(6,'2026-04-01 10:04:29.000000','sales1@company.com',6,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','EMPLOYEE','ACTIVE','sales1'),(7,'2026-04-01 10:04:29.000000','marketing1@company.com',7,'$2a$10$cRkrRUyZv6yHQp00hFkqTuZF7WtAt5AoLM6iVOXY2Z6W7xr5PzRka','EMPLOYEE','ACTIVE','mkt1');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -633,4 +633,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-03-30 21:45:08
+-- Dump completed on 2026-04-01 13:16:08
