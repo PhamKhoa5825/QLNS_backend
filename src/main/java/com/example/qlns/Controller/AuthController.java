@@ -28,9 +28,6 @@ public class AuthController {
     /**
      * POST /api/auth/login
      * Authenticate user and return JWT token
-     * 
-     * @param request username and password
-     * @return AuthenticationResponse with JWT token
      */
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@Valid @RequestBody AuthenticationRequest request) {
@@ -41,9 +38,6 @@ public class AuthController {
     /**
      * POST /api/auth/register
      * Register new user
-     * 
-     * @param request user registration details
-     * @return AuthenticationResponse with JWT token
      */
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(@Valid @RequestBody UserRegistrationRequest request) {
@@ -53,13 +47,10 @@ public class AuthController {
 
     /**
      * GET /api/auth/validate
-     * Validate JWT token (requires authentication)
-     * 
-     * @return success message
+     * Validate JWT token
      */
     @GetMapping("/validate")
     public ResponseEntity<String> validateToken() {
-        // Get token from Authorization header
         String authHeader = ((org.springframework.web.context.request.RequestContextHolder.getRequestAttributes() != null)
             ? ((org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.getRequestAttributes()).getRequest().getHeader("Authorization")
             : null);
@@ -75,10 +66,6 @@ public class AuthController {
 
     /**
      * POST /api/auth/refresh
-     * Refresh JWT token (requires authentication)
-     * Can be used to get a new token before expiration
-     * 
-     * @return new JWT token
      */
     @PostMapping("/refresh")
     public ResponseEntity<String> refreshToken() {
@@ -87,19 +74,21 @@ public class AuthController {
 
     /**
      * POST /api/auth/change-password
-     * Change user password (requires authentication)
-     * 
-     * @param request contains old password, new password, and confirm password
-     * @return success message
      */
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
-        // Get authenticated username from SecurityContext
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        
-        // Call service to change password
         String message = authService.changePassword(username, request);
-        
         return ResponseEntity.ok(new ChangePasswordResponse(message, true));
+    }
+
+    /**
+     * POST /api/auth/logout
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        authService.logout(username);
+        return ResponseEntity.ok("Logout successful");
     }
 }

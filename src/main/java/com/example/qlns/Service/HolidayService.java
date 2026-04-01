@@ -17,6 +17,8 @@ public class HolidayService {
 
     @Autowired
     private HolidayRepository holidayRepository;
+    @Autowired
+    private SystemLogService logService;
 
     @Transactional(readOnly = true)
     public List<Holiday> getAllHolidays() {
@@ -43,7 +45,10 @@ public class HolidayService {
         holiday.setDate(req.getDate());
         holiday.setName(req.getName().trim());
         holiday.setDescription(req.getDescription());
-        return holidayRepository.save(holiday);
+        
+        Holiday saved = holidayRepository.save(holiday);
+        logService.log("CREATE", "Đã thêm ngày lễ mới: " + saved.getName() + " (" + saved.getDate() + ")");
+        return saved;
     }
 
     @Transactional
@@ -66,14 +71,18 @@ public class HolidayService {
             holiday.setDescription(req.getDescription());
         }
 
-        return holidayRepository.save(holiday);
+        Holiday saved = holidayRepository.save(holiday);
+        logService.log("UPDATE", "Đã cập nhật ngày lễ: " + saved.getName());
+        return saved;
     }
 
     @Transactional
     public void deleteHoliday(Long id) {
-        if (!holidayRepository.existsById(id)) {
+        Holiday holiday = holidayRepository.findById(id).orElse(null);
+        if (holiday == null) {
             throw new ResourceNotFoundException("Không tìm thấy ngày lễ này");
         }
         holidayRepository.deleteById(id);
+        logService.log("DELETE", "Đã xóa ngày lễ: " + holiday.getName());
     }
 }

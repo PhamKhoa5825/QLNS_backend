@@ -45,6 +45,7 @@ public class RequestService {
     @Autowired private NotificationService notificationService;
     @Autowired private UserRepository userRepository;
     @Autowired private EmployeeService employeeService;
+    @Autowired private SystemLogService logService;
 
     @Transactional(readOnly = true)
     public List<RequestDTO> getMyRequests(Long employeeId, Integer month, Integer year) {
@@ -179,6 +180,9 @@ public class RequestService {
             e.printStackTrace();
         }
 
+        userRepository.findByEmployeeId(employeeId).ifPresent(u -> 
+            logService.log(u, "CREATE", "Nhân viên " + emp.getFullName() + " đã gửi đơn: " + savedRequest.getTitle() + " (" + savedRequest.getType() + ")")
+        );
         return RequestDTO.from(savedRequest);
     }
 
@@ -238,6 +242,10 @@ public class RequestService {
 
         r.setStatus(RequestStatus.CANCELLED);
         requestRepo.save(r);
+
+        userRepository.findByEmployeeId(employeeId).ifPresent(u -> 
+            logService.log(u, "UPDATE", "Nhân viên " + r.getEmployee().getFullName() + " đã hủy đơn: " + r.getTitle())
+        );
     }
 
     // ── Scheduler: Tự động hủy đơn quá hạn ──────────
@@ -397,6 +405,12 @@ public class RequestService {
                         "Kết quả đơn: " + r.getTitle(),
                         "Đơn của bạn " + statusStr + " bởi " + reviewer.getFullName()
                 );
+                
+                // Log activity
+                String logAction = req.isApproved() ? "APPROVE" : "REJECT";
+                String logDesc = "Quản lý " + reviewer.getFullName() + " " + (req.isApproved() ? "đã duyệt" : "đã từ chối") + 
+                                " đơn " + r.getTitle() + " của " + r.getEmployee().getFullName();
+                logService.log(reviewerUser, logAction, logDesc);
             }
         } catch (Exception e) {
             System.err.println("[NOTIFICATION ERROR - reviewRequest] " + e.getMessage());

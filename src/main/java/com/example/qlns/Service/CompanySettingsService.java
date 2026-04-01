@@ -11,9 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CompanySettingsService {
     private final CompanySettingsRepository repo;
+    private final SystemLogService logService;
 
-    CompanySettingsService(CompanySettingsRepository repo) {
+    CompanySettingsService(CompanySettingsRepository repo, SystemLogService logService) {
         this.repo = repo;
+        this.logService = logService;
     }
 
     public CompanySettings get() {
@@ -35,6 +37,8 @@ public class CompanySettingsService {
         if (req.getMorningEndTime() != null) settings.setMorningEndTime(req.getMorningEndTime());
         if (req.getAfternoonStartTime() != null) settings.setAfternoonStartTime(req.getAfternoonStartTime());
         if (req.getWorkEndTime() != null) settings.setWorkEndTime(req.getWorkEndTime());
-        return repo.save(settings);
+        CompanySettings saved = repo.save(settings);
+        logService.log("UPDATE", "Đã cập nhật cấu hình hệ thống (Tọa độ/Bán kính/Giờ làm việc)");
+        return saved;
     }
 }

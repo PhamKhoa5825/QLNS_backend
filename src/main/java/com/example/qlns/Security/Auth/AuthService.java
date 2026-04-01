@@ -168,12 +168,6 @@ public class AuthService {
 
     /**
      * Change user password
-     * Validates old password, checks that new password matches confirm password
-     * Then updates password in database
-     * 
-     * @param username the username of the user changing password
-     * @param request contains old password, new password, and confirm password
-     * @return success message
      */
     @Transactional
     public String changePassword(String username, ChangePasswordRequest request) {
@@ -208,7 +202,13 @@ public class AuthService {
 
         return "Password changed successfully";
     }
+
+    /**
+     * Logout user and log activity
+     */
+    public void logout(String username) {
+        userRepository.findByUsername(username).ifPresent(user -> {
+            logService.log(user, "LOGOUT", "Người dùng " + user.getUsername() + " đã đăng xuất khỏi hệ thống");
+        });
+    }
 }
-
-
-

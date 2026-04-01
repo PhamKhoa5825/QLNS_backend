@@ -1,5 +1,6 @@
 package com.example.qlns.Service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,12 @@ public class BackupService {
 
     private String resolvedMysqldumpPath;
     private String resolvedMysqlPath;
+
+    @Autowired
+    private com.example.qlns.Service.SystemLogService logService;
+
+    @Autowired
+    private com.example.qlns.Repository.UserRepository userRepository;
 
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
@@ -196,6 +203,13 @@ public class BackupService {
         result.put("filename", filename);
         result.put("createdAt", timestamp);
         result.put("size", Files.size(filePath));
+
+        // Log activity
+        String currentUsername = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        userRepository.findByUsername(currentUsername).ifPresent(user -> {
+            logService.log(user, "BACKUP", "Hệ thống đã tạo bản sao lưu dữ liệu: " + filename);
+        });
+
         return result;
     }
 
@@ -245,11 +259,24 @@ public class BackupService {
         Map<String, Object> result = new HashMap<>();
         result.put("filename", filename);
         result.put("success", true);
+
+        // Log activity
+        String currentUsername = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        userRepository.findByUsername(currentUsername).ifPresent(user -> {
+            logService.log(user, "RESTORE", "Hệ thống đã khôi phục dữ liệu từ bản sao lưu: " + filename);
+        });
+
         return result;
     }
 
     public void deleteBackup(String filename) throws IOException {
         Files.delete(getBackupFile(filename));
+
+        // Log activity
+        String currentUsername = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        userRepository.findByUsername(currentUsername).ifPresent(user -> {
+            logService.log(user, "DELETE", "Hệ thống đã xóa bản sao lưu dữ liệu: " + filename);
+        });
     }
 
     @Scheduled(cron = "0 0 2 * * *")

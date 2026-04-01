@@ -68,6 +68,7 @@ public class EmployeeController {
         if (req.getJoinDate() != null) emp.setJoinDate(LocalDate.parse(req.getJoinDate()));
         if (req.getDateOfBirth() != null) emp.setDateOfBirth(LocalDate.parse(req.getDateOfBirth()));
         if (req.getGender() != null) emp.setGender(Gender.valueOf(req.getGender()));
+        if (req.getBaseSalary() != null) emp.setBaseSalary(req.getBaseSalary());
 
         Role role = Role.EMPLOYEE; 
         if (req.getRole() != null && securityService.isAdmin()) {
@@ -92,6 +93,8 @@ public class EmployeeController {
         emp.setAddress(req.getAddress());
         emp.setPosition(req.getPosition());
         emp.setAvatarUrl(req.getAvatarUrl());
+        if (req.getBaseSalary() != null) emp.setBaseSalary(req.getBaseSalary());
+        
         Employee updated = empService.update(id, emp);
         return ResponseEntity.ok(EmployeeDTO.from(updated, empService.getRoleByEmployeeId(id)));
     }

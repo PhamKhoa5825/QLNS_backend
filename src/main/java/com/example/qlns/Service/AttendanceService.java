@@ -45,6 +45,10 @@ public class AttendanceService {
     private RequestRepository requestRepo;
     @Autowired
     private com.example.qlns.Repository.HolidayRepository holidayRepository;
+    @Autowired
+    private com.example.qlns.Repository.UserRepository userRepository;
+    @Autowired
+    private SystemLogService logService;
 
     private static final int WORKING_DAYS_STANDARD = 22;
     private static final int WORK_HOURS_PER_DAY = 8;
@@ -149,7 +153,11 @@ public class AttendanceService {
         att.setStatus(status);
         att.setLateMinutes(lateMinutes);
 
-        return AttendanceDTO.from(attendanceRepo.save(att));
+        Attendance saved = attendanceRepo.save(att);
+        userRepository.findByEmployeeId(employeeId).ifPresent(u -> 
+            logService.log(u, "CREATE", "Nhân viên " + emp.getFullName() + " đã chấm công vào lúc " + att.getCheckIn().toLocalTime().toString().substring(0, 5))
+        );
+        return AttendanceDTO.from(saved);
     }
 
     @Transactional
@@ -184,7 +192,11 @@ public class AttendanceService {
         att.setCheckOut(checkOut);
         att.setWorkHours((float) workHours);
 
-        return AttendanceDTO.from(attendanceRepo.save(att));
+        Attendance saved = attendanceRepo.save(att);
+        userRepository.findByEmployeeId(employeeId).ifPresent(u -> 
+            logService.log(u, "UPDATE", "Nhân viên " + att.getEmployee().getFullName() + " đã chấm công ra lúc " + att.getCheckOut().toLocalTime().toString().substring(0, 5))
+        );
+        return AttendanceDTO.from(saved);
     }
 
     /**

@@ -36,4 +36,14 @@ public class UpdateEmployeeRequest {
     public String getAvatarUrl() {
         return avatarUrl;
     }
+
+    private Double baseSalary;
+
+    public Double getBaseSalary() {
+        return baseSalary;
+    }
+
+    public void setBaseSalary(Double baseSalary) {
+        this.baseSalary = baseSalary;
+    }
 }
